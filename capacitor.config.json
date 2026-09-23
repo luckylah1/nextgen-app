@@ -1,0 +1,8 @@
+{
+  "appId": "za.co.indabamenscorner.nextgen",
+  "appName": "NextGen",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

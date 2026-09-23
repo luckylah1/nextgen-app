@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-dark: #0a041a;
+  --bg-card: #150a2e;
+  --brand-purple: #7928ca;
+  --brand-violet: #a855f7;
+  --brand-electric: #38bdf8;
+  --text-main: #ffffff;
+  --text-muted: #c084fc;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100%;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Safe area padding for mobile cameras & navigation docks */
+.app-container {
+  min-height: 100vh;
+  padding-top: max(env(safe-area-inset-top), 24px);
+  padding-bottom: 95px; /* Ensures scrolling clears floating bottom bar */
+  padding-left: 16px;
+  padding-right: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pill Search and Inputs */
+.pill-input {
+  width: 100%;
+  padding: 12px 18px 12px 42px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.pill-input:focus {
+  border-color: var(--brand-violet);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Horizontal Carousels */
+.horizontal-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card Styling */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
