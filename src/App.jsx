@@ -5,11 +5,45 @@ import {
   Search, ShieldAlert, ChevronRight, CheckCircle2, ArrowRight, 
   X, MessageSquare, Plus, Trash2, Send, ExternalLink, Sparkles,
   RefreshCw, Award, Check, MoreVertical, Info, Mail, ShieldCheck, Phone, Users, UserCheck,
-  MapPin, Compass, AlertOctagon, Siren, Flame, Radio, UserPlus, MessageCircle, Contact, Download
+  MapPin, Compass, AlertOctagon, Siren, Flame, Radio, UserPlus, MessageCircle, Contact, Download,
+  Vote, BarChart3, Zap, Bot, Bell, BellOff, Volume2, VolumeX
 } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { Geolocation } from '@capacitor/geolocation';
 import { Contacts } from '@capacitor-community/contacts';
+
+// ==========================================
+// DAILY DILEMMA POLLING DATA (SOUTH AFRICAN CONTEXT)
+// ==========================================
+
+const DAILY_DILEMMAS = [
+  {
+    id: 'dilemma-01',
+    dateLabel: "Today's Dilemma",
+    category: "Peer Pressure & Loyalty",
+    scenario: "Your close friend got caught with exam cheat sheets right before the matric trial. The teacher pulls you aside and asks point-blank if you knew. If you lie, you risk getting disciplined too. If you speak, your friend gets suspended.",
+    question: "What is your immediate move?",
+    options: [
+      { id: 'opt1', text: "Protect my friend at all costs — no snitching.", basePct: 38 },
+      { id: 'opt2', text: "Tell the truth privately so I don't go down with them.", basePct: 41 },
+      { id: 'opt3', text: "Refuse to speak and tell my friend to own up themselves.", basePct: 21 }
+    ],
+    breakdownNote: "Over 62% of KZN youth chose options that protect their own matric qualification while pushing their friend toward personal responsibility."
+  },
+  {
+    id: 'dilemma-02',
+    dateLabel: "Yesterday's Flashback",
+    category: "Street Ethics & Money",
+    scenario: "You find an envelope with R800 cash on an empty seat in a local minibus taxi. Nobody is looking, and you have zero transport fare for next week.",
+    question: "What do you do with the money?",
+    options: [
+      { id: 'opt1', text: "Hand it over to the taxi driver / rank marshal.", basePct: 47 },
+      { id: 'opt2', text: "Take it. Finder's keepers, especially when broke.", basePct: 29 },
+      { id: 'opt3', text: "Wait 5 minutes to see if someone runs back searching for it.", basePct: 24 }
+    ],
+    breakdownNote: "Integrity under pressure separates short-term thrills from long-term self-respect."
+  }
+];
 
 // ==========================================
 // EMERGENCY & CRISIS SOS DIRECTORY (SOUTH AFRICA)
@@ -92,7 +126,7 @@ const EMERGENCY_SERVICES_DATA = [
 ];
 
 // ==========================================
-// SEED CONTENT & ARCHITECTURE (KZN REFINED)
+// SEED ARTICLES & SCENARIOS
 // ==========================================
 
 const ARTICLES_DATA = [
@@ -244,7 +278,6 @@ const THEN_NOW_NEXT_DATA = [
   }
 ];
 
-// REFINED KZN & NATIONAL YOUTH OPPORTUNITIES
 const OPPORTUNITIES_DATA = [
   {
     id: 1,
@@ -365,13 +398,66 @@ const BUDGET_PRESETS = [
   { name: 'Freelancer R10,000', income: 10000, budget: { transport: 2000, food: 3000, education: 1000, savings: 2500, entertainment: 1500 } }
 ];
 
+const COMPANION_GRADE_PERSONAS = {
+  '9-12': {
+    title: "Grades 4–6 Explorer Mode",
+    morningGreeting: "Sawubona young leader! School bag packed? Let's make today fun and learn something new.",
+    afternoonGreeting: "Sanibonani! Finished your homework? Take a quick breather and build your focus streak.",
+    dilemmaPrompt: "There's a fun dilemma waiting for you today. What would you do if your friend needed help?",
+    actionChips: [
+      { label: 'Read Story', tab: 'daily' },
+      { label: 'Chat with Friends', tab: 'friends-chat' }
+    ]
+  },
+  '13-15': {
+    title: "Grades 7–9 Junior High Mode",
+    morningGreeting: "Morning! Stay locked in today. Every test and subject choice now sets up your Grade 10 stream.",
+    afternoonGreeting: "Afternoon check-in! Don't let school stress get heavy—balance study time with your friends.",
+    dilemmaPrompt: "A new peer pressure scenario just dropped. Check what other high schoolers voted!",
+    actionChips: [
+      { label: 'Vote on Dilemma', tab: 'think-twice' },
+      { label: 'Subject Guidance', tab: 'daily' }
+    ]
+  },
+  '16-17': {
+    title: "Grades 10–12 Matric Focus Mode",
+    morningGreeting: "Sawubona Matric builder! High APS points start with small daily wins. What's the main study goal today?",
+    afternoonGreeting: "Evening grind! Don't trade your future matric certificate for quick distractions tonight.",
+    dilemmaPrompt: "Today's dilemma touches real exam ethics. Cast your vote and review the peer breakdown.",
+    actionChips: [
+      { label: 'Check Bursaries', modal: 'opps' },
+      { label: 'Think Twice Test', tab: 'think-twice' }
+    ]
+  },
+  '18-25': {
+    title: "Young Adult Hustle Mode",
+    morningGreeting: "Sawubona! Ready to move closer to your career goals? Check out today's verified KZN opportunities.",
+    afternoonGreeting: "Evening review! Protect your cash flow and keep building in-demand digital skills.",
+    dilemmaPrompt: "Today's dilemma tackles real-world money and ethics. See what your peers would do.",
+    actionChips: [
+      { label: 'YES4Youth & Bursaries', modal: 'opps' },
+      { label: 'Rand Budget Plan', tab: 'money' }
+    ]
+  }
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // ADAPTIVE INNER COMPANION STATE
+  const [companionEnabled, setCompanionEnabled] = useState(true);
+  const [companionOpen, setCompanionOpen] = useState(true);
+  const [companionSpeech, setCompanionSpeech] = useState('');
+  const [companionChips, setCompanionChips] = useState([]);
+
   // AGE ONBOARDING STATE
   const [ageBand, setAgeBand] = useState(null);
   const [showAgeOnboarding, setShowAgeOnboarding] = useState(false);
+
+  // DAILY DILEMMA / BLIND POLL STATE
+  const [selectedDilemmaIndex, setSelectedDilemmaIndex] = useState(0);
+  const [votedDilemmas, setVotedDilemmas] = useState({});
 
   // FAMILY SOS LIVE LOCATION STATE
   const [familyContact, setFamilyContact] = useState({ name: '', phone: '' });
@@ -469,6 +555,8 @@ export default function App() {
         let storedAge = null;
         let storedFam = null;
         let storedChats = null;
+        let storedVotes = null;
+        let storedCompanion = null;
 
         try {
           const a = await Preferences.get({ key: 'nextgen_ageband_v1' });
@@ -483,6 +571,10 @@ export default function App() {
           storedFam = f.value;
           const c = await Preferences.get({ key: 'nextgen_friend_chats_v1' });
           storedChats = c.value;
+          const v = await Preferences.get({ key: 'nextgen_dilemma_votes_v1' });
+          storedVotes = v.value;
+          const comp = await Preferences.get({ key: 'nextgen_companion_enabled_v1' });
+          storedCompanion = comp.value;
         } catch {
           storedAge = localStorage.getItem('nextgen_ageband_v1');
           storedGoals = localStorage.getItem('nextgen_goals_v1');
@@ -490,6 +582,12 @@ export default function App() {
           storedStreak = localStorage.getItem('nextgen_streak_v1');
           storedFam = localStorage.getItem('nextgen_family_sos_v1');
           storedChats = localStorage.getItem('nextgen_friend_chats_v1');
+          storedVotes = localStorage.getItem('nextgen_dilemma_votes_v1');
+          storedCompanion = localStorage.getItem('nextgen_companion_enabled_v1');
+        }
+
+        if (storedCompanion !== null) {
+          setCompanionEnabled(storedCompanion === 'true');
         }
 
         if (storedAge) {
@@ -497,6 +595,10 @@ export default function App() {
           setShowAgeOnboarding(false);
         } else {
           setShowAgeOnboarding(true);
+        }
+
+        if (storedVotes) {
+          setVotedDilemmas(JSON.parse(storedVotes));
         }
 
         if (storedFam) {
@@ -522,6 +624,67 @@ export default function App() {
     loadStoredData();
   }, []);
 
+  // Adaptive Companion Logic with Grade Persona Mapping
+  useEffect(() => {
+    if (!companionEnabled) return;
+
+    const currentHour = new Date().getHours();
+    const currentBand = ageBand || '16-17';
+    const persona = COMPANION_GRADE_PERSONAS[currentBand] || COMPANION_GRADE_PERSONAS['16-17'];
+    const greeting = currentHour < 14 ? persona.morningGreeting : persona.afternoonGreeting;
+
+    if (checkedInMood === 'Stressed' || checkedInMood === 'Overwhelmed') {
+      setCompanionSpeech(
+        currentBand === '9-12'
+          ? "Feeling tired or worried? Remember to speak to your parents or teacher. You can also try our quick breathing exercise!"
+          : "School pressure or life getting loud? Take 60 seconds with our 5-4-3-2-1 reset. You don't have to carry it alone."
+      );
+      setCompanionChips([
+        { label: 'Try Grounding', action: () => setShowGrounding(true) },
+        { label: 'Therapist Directory', action: () => { setActiveTab('therapy'); setTherapySubView('therapists'); } }
+      ]);
+    } else if (futureMeChoice?.val === 'no') {
+      setCompanionSpeech(
+        currentBand === '16-17'
+          ? "Saying NO to risky moves protects your matric exams and future bursary eligibility. That's real maturity."
+          : "Standing your ground takes guts. Your future self will thank you for making the wise call."
+      );
+      setCompanionChips([
+        { label: 'Check Consequence', action: () => setActiveTab('think-twice') },
+        { label: 'Set A New Goal', action: () => setActiveTab('future-me') }
+      ]);
+    } else if (!votedDilemmas['dilemma-01']) {
+      setCompanionSpeech(`${greeting} ${persona.dilemmaPrompt}`);
+      setCompanionChips([
+        { label: 'Vote on Dilemma', action: () => setActiveTab('think-twice') },
+        { label: 'Chat with Friends', action: () => setActiveTab('friends-chat') }
+      ]);
+    } else {
+      setCompanionSpeech(`${greeting} You're on a ${habitStreak}-day focus streak. Keep building momentum!`);
+      setCompanionChips(
+        persona.actionChips.map(chip => ({
+          label: chip.label,
+          action: chip.modal === 'opps' ? () => setShowOppsModal(true) : () => setActiveTab(chip.tab)
+        }))
+      );
+    }
+  }, [checkedInMood, futureMeChoice, habitStreak, votedDilemmas, companionEnabled, ageBand]);
+
+  const toggleCompanion = async () => {
+    const nextState = !companionEnabled;
+    setCompanionEnabled(nextState);
+    if (!nextState) {
+      setCompanionOpen(false);
+    } else {
+      setCompanionOpen(true);
+    }
+    try {
+      await Preferences.set({ key: 'nextgen_companion_enabled_v1', value: String(nextState) });
+    } catch {
+      localStorage.setItem('nextgen_companion_enabled_v1', String(nextState));
+    }
+  };
+
   const handleSelectAgeGroup = async (selected) => {
     setAgeBand(selected);
     setShowAgeOnboarding(false);
@@ -529,6 +692,21 @@ export default function App() {
       await Preferences.set({ key: 'nextgen_ageband_v1', value: selected });
     } catch {
       localStorage.setItem('nextgen_ageband_v1', selected);
+    }
+  };
+
+  const handleVoteDilemma = async (dilemmaId, optionId) => {
+    const nextVotes = { ...votedDilemmas, [dilemmaId]: optionId };
+    setVotedDilemmas(nextVotes);
+    
+    if (!completedToday) {
+      handleHabitCheckIn();
+    }
+
+    try {
+      await Preferences.set({ key: 'nextgen_dilemma_votes_v1', value: JSON.stringify(nextVotes) });
+    } catch {
+      localStorage.setItem('nextgen_dilemma_votes_v1', JSON.stringify(nextVotes));
     }
   };
 
@@ -655,6 +833,9 @@ export default function App() {
   const totalSpent = Object.values(budget).reduce((a, b) => a + b, 0);
   const remaining = income - totalSpent;
 
+  const currentDilemma = DAILY_DILEMMAS[selectedDilemmaIndex];
+  const hasVotedCurrent = !!votedDilemmas[currentDilemma.id];
+
   const filteredArticles = useMemo(() => {
     const currentBand = ageBand || '16-17';
     return ARTICLES_DATA.filter(art => art.ageBands.includes(currentBand));
@@ -757,51 +938,63 @@ export default function App() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#0a041a',
-      color: '#fff',
-      paddingTop: 'max(env(safe-area-inset-top), 24px)',
-      paddingBottom: '140px',
-      paddingLeft: '16px',
-      paddingRight: '16px',
-      maxWidth: '480px',
-      margin: '0 auto',
-      position: 'relative',
-      boxSizing: 'border-box'
-    }}>
-      {/* 1. HEADER */}
-      <header style={{ marginBottom: 16 }}>
+    <>
+      {/* 1. TOP SEMANTIC HEADER LANDMARK */}
+      <header style={{ 
+        maxWidth: '480px', 
+        margin: '0 auto', 
+        paddingTop: 'max(env(safe-area-inset-top), 20px)', 
+        paddingLeft: '16px', 
+        paddingRight: '16px', 
+        marginBottom: 16 
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
-                NEXT<span style={{ color: '#a855f7' }}>GEN</span>
+              <span style={{ 
+                fontSize: 26, 
+                fontWeight: 900, 
+                letterSpacing: -0.8, 
+                background: 'linear-gradient(135deg, #ffffff 30%, #e9d5ff 70%, #c084fc 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: '0 4px 20px rgba(168, 85, 247, 0.3)'
+              }}>
+                NEXT<span style={{ color: '#a855f7', WebkitTextFillColor: '#c084fc' }}>GEN</span>
               </span>
-              <span style={{ fontSize: 10, background: 'rgba(168, 85, 247, 0.25)', color: '#c084fc', padding: '2px 8px', borderRadius: 9999, fontWeight: 700 }}>
+              <span style={{ 
+                fontSize: 10, 
+                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(121, 40, 202, 0.15) 100%)', 
+                border: '1px solid rgba(192, 132, 252, 0.35)',
+                color: '#e9d5ff', 
+                padding: '2px 8px', 
+                borderRadius: 9999, 
+                fontWeight: 800,
+                boxShadow: '0 2px 10px rgba(168, 85, 247, 0.25)'
+              }}>
                 V1
               </span>
             </div>
-            <p style={{ fontSize: 11, color: '#c084fc', margin: 0 }}>by Indaba Men's Corner</p>
+            <p style={{ fontSize: 11, color: '#c084fc', margin: 0, fontWeight: 500, letterSpacing: 0.2 }}>by Indaba Men's Corner</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {/* RED FAMILY SOS BUTTON */}
             <button 
               onClick={triggerFamilySos}
               title="Send SOS with Live GPS Location"
               style={{ 
-                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', 
+                background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', 
                 color: '#fff', 
-                border: '2px solid #fecaca', 
-                padding: '7px 11px', 
+                border: '1px solid rgba(254, 202, 202, 0.5)', 
+                padding: '7px 12px', 
                 borderRadius: 9999, 
                 fontSize: 11, 
                 fontWeight: 900,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
-                boxShadow: '0 0 16px rgba(220, 38, 38, 0.65)',
+                boxShadow: '0 4px 18px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255,255,255,0.4)',
                 cursor: 'pointer'
               }}>
               <Radio size={14} /> SOS
@@ -811,94 +1004,130 @@ export default function App() {
             <button 
               onClick={() => { setShowHelpModal(true); setHelpCategory('all'); }}
               style={{ 
-                background: 'linear-gradient(135deg, #ef4444 0%, #ec4899 100%)', 
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(236, 72, 153, 0.35) 100%)', 
                 color: '#fff', 
-                border: 'none', 
-                padding: '7px 11px', 
+                border: '1px solid rgba(255, 255, 255, 0.2)', 
+                padding: '7px 12px', 
                 borderRadius: 9999, 
                 fontSize: 11, 
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
+                backdropFilter: 'blur(16px)',
+                boxShadow: '0 4px 18px rgba(236, 72, 153, 0.25), inset 0 1px 0 rgba(255,255,255,0.3)',
                 cursor: 'pointer'
               }}>
               <ShieldAlert size={14} /> HELP
             </button>
 
-            {/* Toolmenu Trigger */}
+            {/* Glossy More Menu Trigger */}
             <div style={{ position: 'relative' }} ref={toolMenuRef}>
               <button
                 onClick={() => setShowToolMenu(!showToolMenu)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#c084fc',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  color: '#e9d5ff',
                   width: 36,
                   height: 36,
                   borderRadius: 9999,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  backdropFilter: 'blur(16px)',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
                   cursor: 'pointer'
                 }}>
                 <MoreVertical size={18} />
               </button>
 
-              {/* Toolmenu Dropdown */}
+              {/* Toolmenu Dropdown Menu */}
               {showToolMenu && (
                 <div style={{
                   position: 'absolute',
-                  top: '110%',
+                  top: '115%',
                   right: 0,
-                  width: 250,
-                  background: '#150a2e',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
-                  borderRadius: 18,
-                  padding: '6px',
-                  boxShadow: '0 12px 32px rgba(0,0,0,0.7)',
+                  width: 255,
+                  background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: 22,
+                  padding: '8px',
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25)',
                   zIndex: 100,
-                  backdropFilter: 'blur(20px)'
+                  backdropFilter: 'blur(30px)'
                 }}>
-                  {/* Friends Chat Navigation */}
+                  {/* INNER COMPANION TOGGLE IN MENU */}
+                  <div 
+                    onClick={toggleCompanion}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '10px 12px', 
+                      borderRadius: 14, 
+                      cursor: 'pointer', 
+                      background: companionEnabled ? 'rgba(168,85,247,0.18)' : 'rgba(255,255,255,0.04)', 
+                      border: companionEnabled ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.1)' 
+                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {companionEnabled ? <Volume2 size={16} color="#c084fc" /> : <VolumeX size={16} color="#64748b" />}
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: companionEnabled ? '#e9d5ff' : '#94a3b8', margin: 0 }}>
+                          Inner Companion
+                        </p>
+                        <span style={{ fontSize: 10, color: companionEnabled ? '#c084fc' : '#64748b' }}>
+                          {companionEnabled ? 'Active on startup' : 'Muted & hidden'}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{ 
+                      fontSize: 10, 
+                      fontWeight: 800, 
+                      padding: '2px 8px', 
+                      borderRadius: 9999, 
+                      background: companionEnabled ? '#a855f7' : '#334155', 
+                      color: '#fff' 
+                    }}>
+                      {companionEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+
                   <div 
                     onClick={() => { setActiveTab('friends-chat'); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(16,185,129,0.12)' }}>
-                    <MessageCircle size={16} color="#10b981" />
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, cursor: 'pointer', background: 'rgba(16,185,129,0.14)', border: '1px solid rgba(16,185,129,0.25)', marginTop: 4 }}>
+                    <MessageSquare size={16} color="#10b981" />
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#10b981', margin: 0 }}>Free Friends Chat</p>
-                      <span style={{ fontSize: 10, color: '#a7f3d0' }}>Youth messaging for contacts</span>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#34d399', margin: 0 }}>Smart Friends Chat</p>
+                      <span style={{ fontSize: 10, color: '#a7f3d0' }}>Youth messaging & social handoff</span>
                     </div>
                   </div>
 
-                  {/* Family SOS Setting */}
                   <div 
                     onClick={() => { setShowSosSetupModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', marginTop: 4 }}>
                     <Radio size={16} color="#ef4444" />
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', margin: 0 }}>Family SOS Contact</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#f87171', margin: 0 }}>Family SOS Contact</p>
                       <span style={{ fontSize: 10, color: '#fca5a5' }}>{familyContact.phone ? `${familyContact.name} (${familyContact.phone})` : 'Tap to set contact'}</span>
                     </div>
                   </div>
 
-                  {/* Change Age Group */}
                   <div 
                     onClick={() => { setShowAgeOnboarding(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(168,85,247,0.1)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, cursor: 'pointer', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', marginTop: 4 }}>
                     <UserCheck size={16} color="#c084fc" />
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#c084fc', margin: 0 }}>Age Group: {ageBand || 'Set'}</p>
-                      <span style={{ fontSize: 10, color: '#cbd5e1' }}>Change your content level</span>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#d8b4fe', margin: 0 }}>Age Group: {ageBand || 'Set'}</p>
+                      <span style={{ fontSize: 10, color: '#e2e8f0' }}>Change your content level</span>
                     </div>
                   </div>
 
-                  <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '4px 6px' }} />
+                  <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '6px 4px' }} />
 
-                  {/* Then Now Next */}
                   <div 
                     onClick={() => { setShowThenNowModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)' }}>
                     <Clock size={16} color="#f59e0b" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>Then → Now → Next</p>
@@ -906,10 +1135,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Opportunities */}
                   <div 
                     onClick={() => { setShowOppsModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)', marginTop: 2 }}>
                     <Briefcase size={16} color="#38bdf8" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>Youth Opportunities</p>
@@ -917,10 +1145,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Parents, Guardians & Young People */}
                   <div 
                     onClick={() => { setShowParentsModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)', marginTop: 2 }}>
                     <Users size={16} color="#eab308" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>Parents & Guardians</p>
@@ -928,12 +1155,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '4px 6px' }} />
+                  <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '6px 4px' }} />
 
-                  {/* About */}
                   <div 
                     onClick={() => { setShowAboutModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)' }}>
                     <Info size={16} color="#a855f7" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>About NextGen</p>
@@ -941,10 +1167,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Contact */}
                   <div 
                     onClick={() => { setShowContactModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)', marginTop: 2 }}>
                     <Mail size={16} color="#ec4899" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>Contact Us</p>
@@ -952,10 +1177,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Privacy & Safety */}
                   <div 
                     onClick={() => { setShowPrivacyModal(true); setShowToolMenu(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.02)', marginTop: 2 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 12, cursor: 'pointer', background: 'rgba(255,255,255,0.03)', marginTop: 2 }}>
                     <ShieldCheck size={16} color="#10b981" />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#fff', margin: 0 }}>Privacy & Safety</p>
@@ -968,20 +1192,15 @@ export default function App() {
           </div>
         </div>
 
-        {/* SOS STATUS NOTIFICATION BANNER */}
         {sosStatus && (
-          <div style={{ background: '#b91c1c', padding: '8px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, textAlign: 'center', color: '#fff', marginBottom: 8 }}>
+          <aside style={{ background: '#b91c1c', padding: '8px 12px', borderRadius: 14, fontSize: 12, fontWeight: 800, textAlign: 'center', color: '#fff', marginTop: 10, boxShadow: '0 4px 18px rgba(185,28,28,0.4)' }}>
             🚨 {sosStatus}
-          </div>
+          </aside>
         )}
 
-        <p style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 500, marginTop: 6, opacity: 0.9 }}>
-          Learn from yesterday. Understand today. Build tomorrow.
-        </p>
-
-        {/* 2. UNIVERSAL SEARCH BOX */}
+        {/* UNIVERSAL SEARCH BAR */}
         <div style={{ position: 'relative', marginTop: 12 }}>
-          <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#c084fc' }} />
+          <Search size={18} style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', color: '#c084fc' }} />
           <input
             type="text"
             placeholder="Search KZN bursaries, skills, topics, advice..."
@@ -989,13 +1208,15 @@ export default function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '12px 18px 12px 44px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              padding: '13px 20px 13px 48px',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
               borderRadius: 9999,
               color: '#fff',
               fontSize: 13,
               outline: 'none',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
               boxSizing: 'border-box'
             }}
           />
@@ -1003,15 +1224,22 @@ export default function App() {
             <X 
               size={16} 
               onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', color: '#c084fc', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: '#c084fc', cursor: 'pointer' }}
             />
           )}
         </div>
 
-        {/* Search Results Dropdown Overlay */}
         {searchResults && (
-          <div style={{ background: '#170b33', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: 16, marginTop: 8, padding: 8 }}>
-            <p style={{ fontSize: 11, color: '#c084fc', padding: '4px 8px', margin: 0 }}>RESULTS ({searchResults.length})</p>
+          <section aria-label="Search Results" style={{ 
+            background: 'linear-gradient(135deg, rgba(24, 11, 49, 0.95) 0%, rgba(13, 5, 33, 0.98) 100%)', 
+            border: '1px solid rgba(168, 85, 247, 0.3)', 
+            borderRadius: 18, 
+            marginTop: 8, 
+            padding: 8,
+            boxShadow: '0 16px 36px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(24px)'
+          }}>
+            <p style={{ fontSize: 11, color: '#c084fc', padding: '4px 8px', margin: 0, fontWeight: 700 }}>RESULTS ({searchResults.length})</p>
             {searchResults.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8', padding: '8px', margin: 0 }}>No matches found for "{searchQuery}".</p>
             ) : (
@@ -1019,42 +1247,151 @@ export default function App() {
                 <div 
                   key={i} 
                   onClick={() => { res.action(); setSearchQuery(''); }}
-                  style={{ padding: '8px 12px', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', marginBottom: 4 }}>
+                  style={{ padding: '9px 12px', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', marginBottom: 4 }}>
                   <div>
-                    <span style={{ fontSize: 10, color: '#38bdf8', textTransform: 'uppercase', fontWeight: 700 }}>{res.type}</span>
+                    <span style={{ fontSize: 10, color: '#38bdf8', textTransform: 'uppercase', fontWeight: 800 }}>{res.type}</span>
                     <p style={{ fontSize: 13, color: '#fff', margin: 0 }}>{res.title}</p>
                   </div>
                   <ChevronRight size={14} color="#c084fc" />
                 </div>
               ))
             )}
-          </div>
+          </section>
         )}
       </header>
 
-      {/* 3. MAIN ROUTING */}
-      <main style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* VIEW 1: HOME */}
+      {/* 2. MAIN SEMANTIC LANDMARK (ENCOMPASSES DYNAMIC BODY CONTENT) */}
+      <main style={{ 
+        maxWidth: '480px', 
+        margin: '0 auto', 
+        paddingLeft: '16px', 
+        paddingRight: '16px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 14 
+      }}>
+        {/* 2.1 ADAPTIVE INNER COMPANION */}
+        {companionEnabled && companionOpen && (
+          <aside aria-label="Inner Companion Advice" style={{
+            background: 'linear-gradient(135deg, rgba(34, 12, 70, 0.92) 0%, rgba(14, 5, 34, 0.96) 100%)',
+            border: '1px solid rgba(192, 132, 252, 0.45)',
+            borderRadius: 24,
+            padding: '16px 18px',
+            boxShadow: '0 18px 45px rgba(121, 40, 202, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(24px)',
+            position: 'relative'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  position: 'relative',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 9999,
+                  background: 'linear-gradient(135deg, #7928ca 0%, #38bdf8 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 12px rgba(168, 85, 247, 0.6)'
+                }}>
+                  <Bot size={18} color="#fff" />
+                  <span style={{
+                    position: 'absolute',
+                    top: -1,
+                    right: -1,
+                    width: 8,
+                    height: 8,
+                    background: '#10b981',
+                    borderRadius: 9999,
+                    border: '1.5px solid #070214'
+                  }} />
+                </div>
+
+                <div>
+                  <h4 style={{ fontSize: 13, fontWeight: 900, margin: 0, color: '#fff', letterSpacing: -0.2 }}>
+                    {COMPANION_GRADE_PERSONAS[ageBand || '16-17']?.title || 'NextGen Companion'}
+                  </h4>
+                  <span style={{ fontSize: 10, color: '#c084fc', fontWeight: 600 }}>
+                    Active • Age {ageBand || '16-17'} Mode
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setCompanionOpen(false)}
+                title="Dismiss for this session"
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.5, margin: '10px 0 12px 0' }}>
+              "{companionSpeech}"
+            </p>
+
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
+              {companionChips.map((chip, idx) => (
+                <button
+                  key={idx}
+                  onClick={chip.action}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#fff',
+                    padding: '6px 12px',
+                    borderRadius: 9999,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+                  }}>
+                  {chip.label} →
+                </button>
+              ))}
+            </div>
+          </aside>
+        )}
+
+        {/* 2.2 HOME SCREEN VIEW */}
         {activeTab === 'home' && (
           <>
-            {/* SIGNATURE CARD: WILL THIS HELP FUTURE ME? */}
-            <div style={{ 
-              background: 'linear-gradient(135deg, #2e0854 0%, #17042f 100%)', 
-              padding: 18, 
-              borderRadius: 22, 
-              border: '1px solid rgba(168, 85, 247, 0.35)',
-              boxShadow: '0 8px 24px rgba(121, 40, 202, 0.25)'
+            {/* HERO DECISION CARD */}
+            <article style={{
+              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(20, 8, 48, 0.65) 100%)',
+              backdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: 28,
+              padding: '24px 22px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35)',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 1,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%)'
+              }} />
+
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#c084fc" />
-                <span style={{ fontSize: 10, fontWeight: 800, color: '#c084fc', letterSpacing: 0.5 }}>DECISION FILTER</span>
+                <Sparkles size={15} color="#c084fc" />
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#d8b4fe', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                  Today's Filter
+                </span>
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '6px 0 6px 0', color: '#fff' }}>Will this decision help Future Me?</h2>
-              <p style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.4, opacity: 0.9 }}>
+
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: '10px 0 8px 0', color: '#fff', lineHeight: 1.35, letterSpacing: -0.3 }}>
+                Will this decision help Future Me?
+              </h2>
+
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5, margin: '0 0 16px 0' }}>
                 Before you make a move today, pause and picture where it leaves you tomorrow.
               </p>
               
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 {[
                   { label: 'Yes, it builds me', val: 'yes', feedback: 'Great mindset! Keep taking daily steps toward your future self.' },
                   { label: 'Not sure', val: 'maybe', feedback: 'Take 2 minutes to run this through our Think Twice consequence checker.' },
@@ -1065,14 +1402,20 @@ export default function App() {
                     onClick={() => setFutureMeChoice(item)}
                     style={{
                       flex: 1,
-                      padding: '8px 4px',
+                      padding: '10px 6px',
                       borderRadius: 9999,
-                      border: 'none',
+                      border: futureMeChoice?.val === item.val ? '1px solid #fff' : '1px solid rgba(255,255,255,0.18)',
                       fontSize: 11,
-                      fontWeight: 700,
-                      background: futureMeChoice?.val === item.val ? '#fff' : 'rgba(255,255,255,0.1)',
+                      fontWeight: 800,
+                      background: futureMeChoice?.val === item.val 
+                        ? 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)' 
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
                       color: futureMeChoice?.val === item.val ? '#120926' : '#fff',
-                      cursor: 'pointer'
+                      boxShadow: futureMeChoice?.val === item.val 
+                        ? '0 6px 20px rgba(255, 255, 255, 0.35)' 
+                        : '0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
                     }}>
                     {item.label}
                   </button>
@@ -1080,68 +1423,25 @@ export default function App() {
               </div>
 
               {futureMeChoice && (
-                <div style={{ marginTop: 12, padding: '10px 12px', background: 'rgba(255,255,255,0.06)', borderRadius: 12, borderLeft: '3px solid #38bdf8' }}>
-                  <p style={{ fontSize: 12, color: '#38bdf8', margin: 0, fontWeight: 600 }}>{futureMeChoice.feedback}</p>
+                <div style={{ 
+                  marginTop: 14, 
+                  padding: '12px 14px', 
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.05) 100%)', 
+                  borderRadius: 14, 
+                  borderLeft: '3px solid #38bdf8',
+                  borderTop: '1px solid rgba(56, 189, 248, 0.2)',
+                  borderRight: '1px solid rgba(56, 189, 248, 0.1)',
+                  borderBottom: '1px solid rgba(56, 189, 248, 0.1)'
+                }}>
+                  <p style={{ fontSize: 12, color: '#38bdf8', margin: 0, fontWeight: 700 }}>{futureMeChoice.feedback}</p>
                 </div>
               )}
-            </div>
+            </article>
 
-            {/* QUICK FRIENDS CHAT BANNER */}
-            <div 
-              onClick={() => setActiveTab('friends-chat')}
-              style={{
-                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.35)',
-                borderRadius: 18,
-                padding: '12px 16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: 'pointer'
-              }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <MessageCircle size={20} color="#fff" />
-                </div>
-                <div>
-                  <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: '#fff' }}>Free Friends Chat</h4>
-                  <p style={{ fontSize: 11, color: '#a7f3d0', margin: 0 }}>Connect with friends using NextGen</p>
-                </div>
-              </div>
-              <ChevronRight size={18} color="#10b981" />
-            </div>
-
-            {/* 30-DAY HABIT STREAK CARD */}
-            <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 800 }}>30-DAY CHALLENGE</span>
-                <h4 style={{ fontSize: 14, fontWeight: 700, margin: '2px 0' }}>Daily Focus Streak</h4>
-                <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>🔥 {habitStreak} days in a row</p>
-              </div>
-
-              <button
-                onClick={handleHabitCheckIn}
-                style={{
-                  background: completedToday ? '#10b981' : 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '8px 14px',
-                  borderRadius: 9999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  cursor: 'pointer'
-                }}>
-                {completedToday ? <><Check size={14} /> Done</> : '+ Check In'}
-              </button>
-            </div>
-
-            {/* HORIZONTAL MOOD CHIP CAROUSEL */}
-            <div>
-              <p style={{ fontSize: 12, color: '#c084fc', fontWeight: 600, marginBottom: 8 }}>How are you feeling right now?</p>
-              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6 }}>
+            {/* MOOD SELECTION SECTION */}
+            <section aria-label="Mood Check-in">
+              <h3 style={{ fontSize: 12, color: '#c084fc', fontWeight: 700, margin: '0 0 10px 0', letterSpacing: 0.3 }}>How are you feeling right now?</h3>
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
                 {[
                   { label: 'Happy', emoji: '😊' },
                   { label: 'Calm', emoji: '🌿' },
@@ -1149,7 +1449,7 @@ export default function App() {
                   { label: 'Overwhelmed', emoji: '🌪️' },
                   { label: 'I need help', emoji: '🆘' }
                 ].map((m) => (
-                  <div
+                  <button
                     key={m.label}
                     onClick={() => {
                       setCheckedInMood(m.label);
@@ -1160,31 +1460,47 @@ export default function App() {
                       }
                     }}
                     style={{
-                      minWidth: 94,
-                      padding: '12px 10px',
-                      borderRadius: 18,
-                      background: checkedInMood === m.label ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'rgba(255,255,255,0.06)',
-                      border: '1px solid ' + (checkedInMood === m.label ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'),
+                      minWidth: 92,
+                      padding: '12px 8px',
+                      borderRadius: 20,
+                      background: checkedInMood === m.label 
+                        ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(121, 40, 202, 0.45) 100%)' 
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                      border: checkedInMood === m.label 
+                        ? '1.5px solid rgba(255, 255, 255, 0.45)' 
+                        : '1px solid rgba(255, 255, 255, 0.12)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       gap: 4,
+                      backdropFilter: 'blur(16px)',
+                      boxShadow: checkedInMood === m.label 
+                        ? '0 8px 24px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255,255,255,0.4)' 
+                        : '0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)',
                       cursor: 'pointer',
                       flexShrink: 0
                     }}>
                     <span style={{ fontSize: 22 }}>{m.emoji}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>{m.label}</span>
-                  </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{m.label}</span>
+                  </button>
                 ))}
               </div>
 
               {showGrounding && (
-                <div style={{ background: '#1c1038', border: '1px solid #a855f7', borderRadius: 16, padding: 14, marginTop: 10 }}>
+                <article style={{ 
+                  background: 'linear-gradient(135deg, rgba(28, 16, 56, 0.95) 0%, rgba(14, 5, 34, 0.95) 100%)', 
+                  border: '1px solid rgba(168, 85, 247, 0.4)', 
+                  borderRadius: 20, 
+                  padding: 16, 
+                  marginTop: 10,
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  backdropFilter: 'blur(20px)'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#38bdf8' }}>5-4-3-2-1 GROUNDING TECHNIQUE</span>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: '#38bdf8' }}>5-4-3-2-1 GROUNDING TECHNIQUE</span>
                     <X size={16} onClick={() => setShowGrounding(false)} style={{ cursor: 'pointer', color: '#94a3b8' }} />
                   </div>
-                  <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, lineHeight: 1.4 }}>
+                  <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 8, lineHeight: 1.45 }}>
                     Pause for 60 seconds and look around you:<br/>
                     👁️ <strong>5 things</strong> you can see around the room<br/>
                     ✋ <strong>4 things</strong> you can physically touch<br/>
@@ -1192,64 +1508,84 @@ export default function App() {
                     👃 <strong>2 scents</strong> you can smell<br/>
                     🌟 <strong>1 thing</strong> you appreciate about yourself today
                   </p>
-                </div>
+                </article>
               )}
-            </div>
+            </section>
 
-            {/* CORE ACTION TILES */}
-            <h3 style={{ fontSize: 12, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.5, margin: '4px 0 0 0' }}>Daily Focus</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {[
-                { title: 'FREE4ALL Daily', icon: BookOpen, tab: 'daily', desc: 'Today\'s youth news' },
-                { title: 'Think Twice', icon: AlertTriangle, tab: 'think-twice', desc: 'Consequence checker' },
-                { title: 'Money Zone', icon: DollarSign, tab: 'money', desc: 'Rand budget simulator' },
-                { title: 'Therapy Corner', icon: HeartHandshake, tab: 'therapy', desc: 'Local therapists & chat' }
-              ].map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <div
-                    key={item.tab}
-                    onClick={() => setActiveTab(item.tab)}
-                    style={{
-                      background: '#150a2e',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 18,
-                      padding: 14,
-                      cursor: 'pointer'
-                    }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 12, background: 'rgba(168, 85, 247, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <IconComponent size={18} color="#c084fc" />
-                    </div>
-                    <h4 style={{ fontSize: 13, fontWeight: 700, marginTop: 8, marginBottom: 2 }}>{item.title}</h4>
-                    <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{item.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
+            {/* EXPLORE NEXTGEN 4-GRID PORTAL */}
+            <section aria-label="Feature Directory">
+              <h3 style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.8, margin: '6px 0 10px 0', fontWeight: 800 }}>Explore NextGen</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  { title: 'The Daily Dilemma', icon: Compass, tab: 'think-twice', desc: 'Blind peer polls & checks' },
+                  { title: 'Smart Friends Chat', icon: MessageSquare, tab: 'friends-chat', desc: 'Local & social handoff' },
+                  { title: 'Money Zone', icon: DollarSign, tab: 'money', desc: 'Rand budget simulator' },
+                  { title: 'Therapy Corner', icon: HeartHandshake, tab: 'therapy', desc: 'Support & advice' }
+                ].map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <article
+                      key={item.title}
+                      onClick={() => setActiveTab(item.tab)}
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        borderRadius: 22,
+                        padding: 16,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                      }}>
+                      <div style={{ 
+                        width: 38, 
+                        height: 38, 
+                        borderRadius: 14, 
+                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(121, 40, 202, 0.15) 100%)', 
+                        border: '1px solid rgba(192, 132, 252, 0.3)',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(168, 85, 247, 0.2)'
+                      }}>
+                        <IconComponent size={20} color="#e9d5ff" />
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: 14, fontWeight: 800, margin: 0, color: '#fff' }}>{item.title}</h4>
+                        <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0 0' }}>{item.desc}</p>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           </>
         )}
 
-        {/* VIEW 2: FRIENDS CHAT */}
+        {/* 2.3 SMART FRIENDS CHAT VIEW */}
         {activeTab === 'friends-chat' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <section aria-label="Smart Friends Chat" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Friends Chat</h2>
-                <p style={{ fontSize: 12, color: '#10b981', margin: '2px 0 0 0' }}>Data-Free Style Youth Messaging</p>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Smart Friends Chat</h2>
+                <p style={{ fontSize: 12, color: '#10b981', margin: '2px 0 0 0' }}>Chat locally or handoff to WhatsApp & Insta</p>
               </div>
               <button
                 onClick={loadDeviceContacts}
                 style={{
-                  background: 'rgba(16,185,129,0.15)',
-                  border: '1px solid #10b981',
-                  color: '#10b981',
-                  padding: '6px 12px',
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.5)',
+                  color: '#34d399',
+                  padding: '7px 14px',
                   borderRadius: 9999,
                   fontSize: 11,
-                  fontWeight: 700,
+                  fontWeight: 800,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4,
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
                   cursor: 'pointer'
                 }}>
                 <Contact size={14} /> Sync Contacts
@@ -1257,10 +1593,20 @@ export default function App() {
             </div>
 
             {selectedFriend ? (
-              <div style={{ background: '#150a2e', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 20, padding: 16, display: 'flex', flexDirection: 'column', height: 380 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <article style={{ 
+                background: 'linear-gradient(135deg, rgba(21, 10, 46, 0.95) 0%, rgba(11, 4, 28, 0.98) 100%)', 
+                border: '1px solid rgba(16,185,129,0.35)', 
+                borderRadius: 24, 
+                padding: 16, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                height: 440,
+                backdropFilter: 'blur(30px)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25)'
+              }}>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 9999, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9999, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, boxShadow: '0 4px 12px rgba(168,85,247,0.3)' }}>
                       {selectedFriend.name[0]}
                     </div>
                     <div>
@@ -1273,13 +1619,84 @@ export default function App() {
                     style={{ background: 'none', border: 'none', color: '#c084fc', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     Close
                   </button>
-                </div>
+                </header>
+
+                <nav aria-label="Social Handoff" style={{ display: 'flex', gap: 6, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <a
+                    href={`https://wa.me/${selectedFriend.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Sawubona! Connecting with you from the NextGen youth wellness app.")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      flex: 1,
+                      background: 'rgba(37, 211, 102, 0.15)',
+                      border: '1px solid rgba(37, 211, 102, 0.5)',
+                      color: '#25d366',
+                      padding: '8px 4px',
+                      borderRadius: 12,
+                      fontSize: 10,
+                      fontWeight: 800,
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4
+                    }}>
+                    💬 WhatsApp
+                  </a>
+
+                  <a
+                    href="https://instagram.com/direct/inbox/"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      flex: 1,
+                      background: 'rgba(225, 48, 108, 0.15)',
+                      border: '1px solid rgba(225, 48, 108, 0.5)',
+                      color: '#e1306c',
+                      padding: '8px 4px',
+                      borderRadius: 12,
+                      fontSize: 10,
+                      fontWeight: 800,
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4
+                    }}>
+                    📸 Instagram
+                  </a>
+
+                  <a
+                    href="https://m.me/"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      flex: 1,
+                      background: 'rgba(0, 132, 255, 0.15)',
+                      border: '1px solid rgba(0, 132, 255, 0.5)',
+                      color: '#38bdf8',
+                      padding: '8px 4px',
+                      borderRadius: 12,
+                      fontSize: 10,
+                      fontWeight: 800,
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4
+                    }}>
+                    ⚡ Messenger
+                  </a>
+                </nav>
 
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 0' }}>
                   {(friendChats[selectedFriend.id] || []).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '24px 10px', color: '#94a3b8', fontSize: 12 }}>
-                      🔒 Messages with {selectedFriend.name} are stored locally. Say sawubona!
-                    </div>
+                    <p style={{ textAlign: 'center', padding: '24px 10px', color: '#94a3b8', fontSize: 12 }}>
+                      🔒 Chat locally or tap one of the social buttons above to continue this conversation on WhatsApp, Instagram, or Messenger.
+                    </p>
                   ) : (
                     (friendChats[selectedFriend.id] || []).map((msg) => (
                       <div 
@@ -1287,9 +1704,11 @@ export default function App() {
                         style={{
                           alignSelf: msg.sender === 'me' ? 'flex-end' : 'flex-start',
                           maxWidth: '80%',
-                          background: msg.sender === 'me' ? '#059669' : 'rgba(255,255,255,0.08)',
-                          padding: '8px 12px',
-                          borderRadius: 14,
+                          background: msg.sender === 'me' 
+                            ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                            : 'rgba(255,255,255,0.08)',
+                          padding: '10px 14px',
+                          borderRadius: 16,
                           fontSize: 12
                         }}>
                         <p style={{ margin: 0 }}>{msg.text}</p>
@@ -1302,7 +1721,7 @@ export default function App() {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <footer style={{ display: 'flex', gap: 6, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                   <input
                     type="text"
                     placeholder="Type message..."
@@ -1312,9 +1731,9 @@ export default function App() {
                     style={{
                       flex: 1,
                       background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.12)',
+                      border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: 9999,
-                      padding: '10px 14px',
+                      padding: '10px 16px',
                       color: '#fff',
                       fontSize: 12,
                       outline: 'none'
@@ -1323,8 +1742,8 @@ export default function App() {
                   <button
                     onClick={sendFriendMessage}
                     style={{
-                      width: 38,
-                      height: 38,
+                      width: 40,
+                      height: 40,
                       borderRadius: 9999,
                       background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                       border: 'none',
@@ -1336,18 +1755,24 @@ export default function App() {
                     }}>
                     <Send size={15} />
                   </button>
-                </div>
-              </div>
+                </footer>
+              </article>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {deviceContacts.length === 0 ? (
-                  <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 20, textAlign: 'center' }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 9999, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px auto' }}>
-                      <Contact size={22} color="#10b981" />
+                  <article style={{ 
+                    background: 'linear-gradient(135deg, rgba(21, 10, 46, 0.9) 0%, rgba(12, 4, 30, 0.95) 100%)', 
+                    border: '1px solid rgba(255,255,255,0.18)', 
+                    borderRadius: 24, 
+                    padding: 24, 
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'rgba(16,185,129,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
+                      <Contact size={24} color="#10b981" />
                     </div>
-                    <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 6px 0' }}>Chat With Friends</h3>
-                    <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.4, margin: '0 0 14px 0' }}>
-                      NextGen matches you with people in your phone contacts so teens stay safe from strangers.
+                    <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 6px 0' }}>Chat With Friends</h3>
+                    <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, margin: '0 0 16px 0' }}>
+                      Connect with your phone contacts or quickly transition conversations to WhatsApp and Instagram.
                     </p>
                     <button
                       onClick={loadDeviceContacts}
@@ -1356,62 +1781,62 @@ export default function App() {
                         background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         color: '#fff',
                         border: 'none',
-                        padding: '10px 20px',
+                        padding: '12px 24px',
                         borderRadius: 9999,
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 800,
                         cursor: 'pointer'
                       }}>
                       {isLoadingContacts ? 'Syncing...' : 'Find Friends in Contacts'}
                     </button>
-                  </div>
+                  </article>
                 ) : (
                   deviceContacts.map((friend) => (
-                    <div
+                    <article
                       key={friend.id}
                       onClick={() => setSelectedFriend(friend)}
                       style={{
-                        background: '#150a2e',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: 16,
-                        padding: '12px 14px',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.16)',
+                        borderRadius: 20,
+                        padding: '14px 16px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         cursor: 'pointer'
                       }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 9999, background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 9999, background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
                           {friend.name[0]}
                         </div>
                         <div>
-                          <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{friend.name}</h4>
+                          <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{friend.name}</h4>
                           <span style={{ fontSize: 11, color: '#94a3b8' }}>{friend.phone}</span>
                         </div>
                       </div>
-                      <ChevronRight size={16} color="#10b981" />
-                    </div>
+                      <ChevronRight size={18} color="#10b981" />
+                    </article>
                   ))
                 )}
               </div>
             )}
-          </div>
+          </section>
         )}
 
-        {/* VIEW 3: THERAPY CORNER */}
+        {/* 2.4 THERAPY CORNER VIEW */}
         {activeTab === 'therapy' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div>
+          <section aria-label="Therapy Corner" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <header>
               <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Therapy Corner</h2>
               <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Pause. Talk. Refocus. Move Forward.</p>
-            </div>
+            </header>
 
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', padding: 4, borderRadius: 9999, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <nav aria-label="Therapy Subviews" style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', padding: 4, borderRadius: 9999, border: '1px solid rgba(255,255,255,0.18)' }}>
               <button
                 onClick={() => setTherapySubView('therapists')}
                 style={{
                   flex: 1,
-                  padding: '8px 12px',
+                  padding: '9px 12px',
                   borderRadius: 9999,
                   border: 'none',
                   fontSize: 12,
@@ -1430,7 +1855,7 @@ export default function App() {
                 onClick={() => setTherapySubView('chat')}
                 style={{
                   flex: 1,
-                  padding: '8px 12px',
+                  padding: '9px 12px',
                   borderRadius: 9999,
                   border: 'none',
                   fontSize: 12,
@@ -1445,7 +1870,7 @@ export default function App() {
                 }}>
                 <MessageSquare size={14} /> Talk It Out
               </button>
-            </div>
+            </nav>
 
             {therapySubView === 'therapists' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1454,37 +1879,42 @@ export default function App() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button 
                       onClick={() => setTherapyFilter('all')}
-                      style={{ background: therapyFilter === 'all' ? '#a855f7' : 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 10, padding: '4px 8px', borderRadius: 9999 }}>
+                      style={{ background: therapyFilter === 'all' ? '#a855f7' : 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 9999, fontWeight: 700 }}>
                       All
                     </button>
                     <button 
                       onClick={() => setTherapyFilter('free')}
-                      style={{ background: therapyFilter === 'free' ? '#10b981' : 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 10, padding: '4px 8px', borderRadius: 9999 }}>
+                      style={{ background: therapyFilter === 'free' ? '#10b981' : 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', fontSize: 10, padding: '4px 10px', borderRadius: 9999, fontWeight: 700 }}>
                       100% Free
                     </button>
                   </div>
                 </div>
 
                 {filteredTherapists.map((item) => (
-                  <div key={item.id} style={{ background: '#150a2e', border: '1px solid rgba(168, 85, 247, 0.25)', borderRadius: 18, padding: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <article key={item.id} style={{ 
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)', 
+                    border: '1px solid rgba(168, 85, 247, 0.3)', 
+                    borderRadius: 22, 
+                    padding: 16
+                  }}>
+                    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <span style={{ fontSize: 10, color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>{item.type}</span>
-                        <h4 style={{ fontSize: 15, fontWeight: 700, margin: '2px 0 4px 0', color: '#fff' }}>{item.name}</h4>
+                        <h4 style={{ fontSize: 15, fontWeight: 800, margin: '2px 0 4px 0', color: '#fff' }}>{item.name}</h4>
                       </div>
-                      <span style={{ fontSize: 10, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: 9999, fontWeight: 700 }}>
+                      <span style={{ fontSize: 10, background: 'rgba(16, 185, 129, 0.18)', color: '#34d399', padding: '3px 10px', borderRadius: 9999, fontWeight: 800 }}>
                         {item.cost}
                       </span>
-                    </div>
+                    </header>
 
-                    <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.4, margin: '6px 0' }}>{item.desc}</p>
+                    <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, margin: '6px 0' }}>{item.desc}</p>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94a3b8', margin: '4px 0 10px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94a3b8', margin: '4px 0 12px 0' }}>
                       <MapPin size={13} color="#f59e0b" />
                       <span>{item.location}</span>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <footer style={{ display: 'flex', gap: 8 }}>
                       <a 
                         href={`tel:${item.phone}`}
                         style={{
@@ -1492,10 +1922,10 @@ export default function App() {
                           background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)',
                           color: '#fff',
                           textDecoration: 'none',
-                          padding: '8px 12px',
+                          padding: '9px 12px',
                           borderRadius: 9999,
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 800,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1510,26 +1940,35 @@ export default function App() {
                         rel="noreferrer"
                         style={{
                           background: 'rgba(255,255,255,0.08)',
+                          border: '1px solid rgba(255,255,255,0.18)',
                           color: '#38bdf8',
                           textDecoration: 'none',
-                          padding: '8px 14px',
+                          padding: '9px 14px',
                           borderRadius: 9999,
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 800,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4
                         }}>
-                        <Compass size={13} /> View Map
+                        <Compass size={13} /> Map
                       </a>
-                    </div>
-                  </div>
+                    </footer>
+                  </article>
                 ))}
               </div>
             )}
 
             {therapySubView === 'chat' && (
-              <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 16, display: 'flex', flexDirection: 'column', height: 340 }}>
+              <article style={{ 
+                background: 'linear-gradient(135deg, rgba(21, 10, 46, 0.95) 0%, rgba(11, 4, 28, 0.98) 100%)', 
+                border: '1px solid rgba(255,255,255,0.18)', 
+                borderRadius: 24, 
+                padding: 16, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                height: 360
+              }}>
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 4 }}>
                   {chatMessages.map((m, i) => (
                     <div 
@@ -1541,15 +1980,16 @@ export default function App() {
                         padding: '10px 14px',
                         borderRadius: m.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                         fontSize: 12,
-                        lineHeight: 1.4,
-                        color: '#fff'
+                        lineHeight: 1.45,
+                        color: '#fff',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.25)'
                       }}>
                       {m.text}
                     </div>
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.08)', scrollbarWidth: 'none' }}>
                   {['Feeling stressed', 'School pressure', 'Find me a counsellor', 'Emergency help'].map(chip => (
                     <button
                       key={chip}
@@ -1564,12 +2004,13 @@ export default function App() {
                       }}
                       style={{
                         background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.15)',
+                        border: '1px solid rgba(255,255,255,0.18)',
                         borderRadius: 9999,
-                        color: '#c084fc',
+                        color: '#e9d5ff',
                         fontSize: 11,
-                        padding: '5px 12px',
+                        padding: '6px 14px',
                         whiteSpace: 'nowrap',
+                        fontWeight: 700,
                         cursor: 'pointer'
                       }}>
                       {chip}
@@ -1577,7 +2018,7 @@ export default function App() {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                <footer style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                   <input 
                     type="text" 
                     placeholder="Type a message..."
@@ -1587,7 +2028,7 @@ export default function App() {
                     style={{
                       flex: 1,
                       background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.12)',
+                      border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: 9999,
                       padding: '10px 16px',
                       color: '#fff',
@@ -1598,8 +2039,8 @@ export default function App() {
                   <button 
                     onClick={() => sendChatMessage()}
                     style={{
-                      width: 38,
-                      height: 38,
+                      width: 40,
+                      height: 40,
                       borderRadius: 9999,
                       background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)',
                       border: 'none',
@@ -1611,15 +2052,15 @@ export default function App() {
                     }}>
                     <Send size={15} />
                   </button>
-                </div>
-              </div>
+                </footer>
+              </article>
             )}
-          </div>
+          </section>
         )}
 
-        {/* VIEW 4: DAILY */}
+        {/* 2.5 DAILY STORIES VIEW */}
         {activeTab === 'daily' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <section aria-label="Daily Guidance Stories" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>FREE4ALL Daily</h2>
@@ -1629,7 +2070,12 @@ export default function App() {
             </div>
 
             {selectedArticle ? (
-              <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 16 }}>
+              <article style={{ 
+                background: 'linear-gradient(135deg, rgba(21, 10, 46, 0.95) 0%, rgba(11, 4, 28, 0.98) 100%)', 
+                border: '1px solid rgba(255,255,255,0.18)', 
+                borderRadius: 24, 
+                padding: 18
+              }}>
                 <button 
                   onClick={() => setSelectedArticle(null)}
                   style={{ background: 'none', border: 'none', color: '#c084fc', fontSize: 12, fontWeight: 700, marginBottom: 12, padding: 0, cursor: 'pointer' }}>
@@ -1638,11 +2084,11 @@ export default function App() {
                 <span style={{ fontSize: 10, color: '#c084fc', fontWeight: 800, textTransform: 'uppercase' }}>
                   {selectedArticle.category} • {selectedArticle.readTime}
                 </span>
-                <h3 style={{ fontSize: 17, fontWeight: 800, margin: '6px 0 10px 0' }}>{selectedArticle.title}</h3>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>{selectedArticle.description}</p>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: '6px 0 10px 0' }}>{selectedArticle.title}</h3>
+                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.55 }}>{selectedArticle.description}</p>
 
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 14, borderRadius: 16, margin: '14px 0' }}>
-                  <h4 style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700, marginBottom: 6, margin: '0 0 6px 0' }}>What does this mean for me?</h4>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 14, borderRadius: 18, margin: '14px 0' }}>
+                  <h4 style={{ fontSize: 13, color: '#f59e0b', fontWeight: 800, marginBottom: 6, margin: '0 0 6px 0' }}>What does this mean for me?</h4>
                   <ul style={{ paddingLeft: 18, fontSize: 12, color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: 6, margin: 0 }}>
                     {selectedArticle.meaningPoints.map((pt, i) => (
                       <li key={i}>{pt}</li>
@@ -1650,119 +2096,252 @@ export default function App() {
                   </ul>
                 </div>
 
-                <div style={{ borderLeft: '3px solid #10b981', paddingLeft: 10 }}>
+                <div style={{ borderLeft: '3px solid #10b981', paddingLeft: 12 }}>
                   <span style={{ fontSize: 11, color: '#10b981', fontWeight: 800 }}>YOUR CHALLENGE</span>
                   <p style={{ fontSize: 12, color: '#e2e8f0', marginTop: 2, margin: 0 }}>{selectedArticle.challenge}</p>
                 </div>
-              </div>
+              </article>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {filteredArticles.map(art => (
-                  <div
+                  <article
                     key={art.id}
                     onClick={() => setSelectedArticle(art)}
-                    style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, cursor: 'pointer' }}>
-                    <span style={{ fontSize: 10, color: '#c084fc', fontWeight: 700 }}>{art.category} • {art.readTime}</span>
-                    <h4 style={{ fontSize: 14, fontWeight: 700, margin: '4px 0' }}>{art.title}</h4>
-                    <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.4, margin: 0 }}>{art.description}</p>
-                  </div>
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)', 
+                      border: '1px solid rgba(255,255,255,0.16)', 
+                      borderRadius: 20, 
+                      padding: 16, 
+                      cursor: 'pointer'
+                    }}>
+                    <span style={{ fontSize: 10, color: '#c084fc', fontWeight: 800 }}>{art.category} • {art.readTime}</span>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, margin: '4px 0' }}>{art.title}</h4>
+                    <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, margin: 0 }}>{art.description}</p>
+                  </article>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         )}
 
-        {/* VIEW 5: THINK TWICE */}
+        {/* 2.6 DECIDE & THE DAILY DILEMMA VIEW */}
         {activeTab === 'think-twice' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Think Twice</h2>
-            <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Pause. Question. Understand consequences before acting.</p>
+          <section aria-label="Decide and Daily Dilemma" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <header>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Decide & Reflect</h2>
+              <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Real choices, peer consensus, and consequence checks.</p>
+            </header>
 
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {THINK_TWICE_SCENARIOS.map((sc, index) => (
+            {/* DAILY DILEMMA POLL ARTICLE */}
+            <article style={{
+              background: 'linear-gradient(135deg, rgba(31, 8, 64, 0.9) 0%, rgba(17, 3, 38, 0.95) 100%)',
+              border: '1.5px solid rgba(168, 85, 247, 0.45)',
+              borderRadius: 26,
+              padding: 20,
+              boxShadow: '0 20px 50px rgba(121, 40, 202, 0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(24px)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Zap size={16} color="#f59e0b" />
+                  <span style={{ fontSize: 11, fontWeight: 900, color: '#f59e0b', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                    {currentDilemma.dateLabel}
+                  </span>
+                </div>
+                <span style={{ fontSize: 10, background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24', padding: '3px 10px', borderRadius: 9999, fontWeight: 800 }}>
+                  Blind Peer Poll
+                </span>
+              </div>
+
+              <span style={{ fontSize: 11, color: '#c084fc', fontWeight: 800, display: 'block', marginTop: 8 }}>
+                Topic: {currentDilemma.category}
+              </span>
+
+              <p style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, marginTop: 6 }}>
+                "{currentDilemma.scenario}"
+              </p>
+
+              <h4 style={{ fontSize: 13, fontWeight: 800, color: '#fff', margin: '12px 0 10px 0' }}>
+                👉 {currentDilemma.question}
+              </h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {currentDilemma.options.map((opt) => {
+                  const isUserChoice = votedDilemmas[currentDilemma.id] === opt.id;
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => !hasVotedCurrent && handleVoteDilemma(currentDilemma.id, opt.id)}
+                      style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 16,
+                        background: hasVotedCurrent 
+                          ? (isUserChoice ? 'rgba(168, 85, 247, 0.35)' : 'rgba(255, 255, 255, 0.05)')
+                          : 'rgba(255, 255, 255, 0.08)',
+                        border: isUserChoice ? '1.5px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.16)',
+                        padding: '13px 16px',
+                        cursor: hasVotedCurrent ? 'default' : 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}>
+                      {hasVotedCurrent && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            width: `${opt.basePct}%`,
+                            background: isUserChoice 
+                              ? 'linear-gradient(90deg, rgba(168, 85, 247, 0.5), rgba(56, 189, 248, 0.5))' 
+                              : 'rgba(255, 255, 255, 0.08)',
+                            zIndex: 1
+                          }}
+                        />
+                      )}
+
+                      <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: isUserChoice ? 800 : 600, color: '#fff', paddingRight: 8 }}>
+                          {opt.text} {isUserChoice && " (Your Choice)"}
+                        </span>
+
+                        {hasVotedCurrent && (
+                          <span style={{ fontSize: 13, fontWeight: 900, color: isUserChoice ? '#38bdf8' : '#cbd5e1' }}>
+                            {opt.basePct}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {hasVotedCurrent ? (
+                <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(16, 185, 129, 0.15)', borderLeft: '3px solid #10b981', borderRadius: 12 }}>
+                  <p style={{ fontSize: 11, color: '#a7f3d0', margin: 0, lineHeight: 1.45, fontWeight: 600 }}>
+                    <strong>Peer Consensus:</strong> {currentDilemma.breakdownNote}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: 11, color: '#94a3b8' }}>
+                  <Vote size={14} color="#a855f7" />
+                  <span>Tap an answer to cast your vote and reveal what KZN peers chose.</span>
+                </div>
+              )}
+
+              <footer style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
                 <button
-                  key={sc.id}
-                  onClick={() => setSelectedScenario(sc)}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: 9999,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    background: selectedScenario.id === sc.id ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'rgba(255,255,255,0.06)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer'
-                  }}>
-                  Scenario 0{index + 1}
+                  onClick={() => setSelectedDilemmaIndex((prev) => (prev === 0 ? 1 : 0))}
+                  style={{ background: 'none', border: 'none', color: '#c084fc', fontSize: 11, fontWeight: 800, cursor: 'pointer', padding: 0 }}>
+                  Switch to {selectedDilemmaIndex === 0 ? "Yesterday's Flashback" : "Today's Dilemma"} →
                 </button>
-              ))}
-            </div>
+              </footer>
+            </article>
 
-            <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 16 }}>
-              <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 800 }}>SITUATION</span>
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: '4px 0 10px 0' }}>{selectedScenario.title}</h3>
-              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.4 }}>{selectedScenario.situation}</p>
+            {/* THINK TWICE SCENARIOS ARTICLE */}
+            <article style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <h3 style={{ fontSize: 12, color: '#f59e0b', fontWeight: 900, margin: '6px 0 0 0', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                Think Twice: Consequence Checker
+              </h3>
 
-              <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '14px 0' }} />
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
+                {THINK_TWICE_SCENARIOS.map((sc, index) => (
+                  <button
+                    key={sc.id}
+                    onClick={() => setSelectedScenario(sc)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: 9999,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      background: selectedScenario.id === sc.id ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'rgba(255,255,255,0.06)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer'
+                    }}>
+                    Scenario 0{index + 1}
+                  </button>
+                ))}
+              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
-                <div>
-                  <strong style={{ color: '#94a3b8' }}>Why are you tempted?</strong>
-                  <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.why}</p>
-                </div>
-                <div>
-                  <strong style={{ color: '#38bdf8' }}>Immediate (Now):</strong>
-                  <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.now}</p>
-                </div>
-                <div>
-                  <strong style={{ color: '#f59e0b' }}>Later on:</strong>
-                  <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.later}</p>
-                </div>
-                <div style={{ background: 'rgba(244,63,94,0.1)', padding: 10, borderRadius: 12, borderLeft: '3px solid #f43f5e' }}>
-                  <strong style={{ color: '#f43f5e' }}>Impact on Future Me:</strong>
-                  <p style={{ color: '#fecdd3', marginTop: 2, margin: 0 }}>{selectedScenario.future}</p>
+              <div style={{ 
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)', 
+                border: '1px solid rgba(255,255,255,0.18)', 
+                borderRadius: 24, 
+                padding: 18
+              }}>
+                <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 900 }}>SITUATION</span>
+                <h3 style={{ fontSize: 16, fontWeight: 800, margin: '4px 0 10px 0' }}>{selectedScenario.title}</h3>
+                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.45 }}>{selectedScenario.situation}</p>
+
+                <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '14px 0' }} />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
+                  <div>
+                    <strong style={{ color: '#94a3b8' }}>Why are you tempted?</strong>
+                    <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.why}</p>
+                  </div>
+                  <div>
+                    <strong style={{ color: '#38bdf8' }}>Immediate (Now):</strong>
+                    <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.now}</p>
+                  </div>
+                  <div>
+                    <strong style={{ color: '#f59e0b' }}>Later on:</strong>
+                    <p style={{ color: '#cbd5e1', marginTop: 2, margin: 0 }}>{selectedScenario.later}</p>
+                  </div>
+                  <div style={{ background: 'rgba(244,63,94,0.12)', padding: 12, borderRadius: 14, borderLeft: '3px solid #f43f5e' }}>
+                    <strong style={{ color: '#f43f5e' }}>Impact on Future Me:</strong>
+                    <p style={{ color: '#fecdd3', marginTop: 2, margin: 0 }}>{selectedScenario.future}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </article>
+          </section>
         )}
 
-        {/* VIEW 6: MONEY ZONE */}
+        {/* 2.7 MONEY ZONE VIEW */}
         {activeTab === 'money' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Money Zone</h2>
-            <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Interactive South African Rand (ZAR) budget simulator.</p>
+          <section aria-label="Money Zone ZAR Budget" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <header>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Money Zone</h2>
+              <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Interactive South African Rand (ZAR) budget simulator.</p>
+            </header>
 
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            <nav aria-label="Budget Presets" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
               {BUDGET_PRESETS.map((p) => (
                 <button
                   key={p.name}
                   onClick={() => applyBudgetPreset(p)}
                   style={{
                     background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    padding: '6px 12px',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    padding: '8px 14px',
                     borderRadius: 9999,
-                    color: '#c084fc',
+                    color: '#e9d5ff',
                     fontSize: 11,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     whiteSpace: 'nowrap',
                     cursor: 'pointer'
                   }}>
                   ⚡ {p.name}
                 </button>
               ))}
-            </div>
+            </nav>
 
-            <div style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 16 }}>
+            <article style={{ 
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)', 
+              border: '1px solid rgba(255,255,255,0.18)', 
+              borderRadius: 24, 
+              padding: 18
+            }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#c084fc' }}>Monthly Income (Rand)</span>
+                <span style={{ fontSize: 12, color: '#c084fc', fontWeight: 700 }}>Monthly Income (Rand)</span>
                 <input 
                   type="number"
                   value={income}
                   onChange={(e) => setIncome(Number(e.target.value))}
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#10b981', padding: '6px 12px', borderRadius: 9999, width: 110, textAlign: 'right', fontWeight: 800, fontSize: 15 }}
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)', color: '#10b981', padding: '6px 14px', borderRadius: 9999, width: 110, textAlign: 'right', fontWeight: 900, fontSize: 15 }}
                 />
               </div>
 
@@ -1774,59 +2353,66 @@ export default function App() {
                       type="number" 
                       value={budget[cat]} 
                       onChange={(e) => setBudget({ ...budget, [cat]: Number(e.target.value) })}
-                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px 10px', borderRadius: 9999, width: 90, textAlign: 'right', fontSize: 13 }}
+                      style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '6px 12px', borderRadius: 9999, width: 90, textAlign: 'right', fontSize: 13 }}
                     />
                   </div>
                 ))}
               </div>
 
               <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '14px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>Remaining Balance:</span>
-                <span style={{ fontWeight: 800, fontSize: 16, color: remaining >= 0 ? '#10b981' : '#f43f5e' }}>
+              <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 800, fontSize: 14 }}>Remaining Balance:</span>
+                <span style={{ fontWeight: 900, fontSize: 17, color: remaining >= 0 ? '#10b981' : '#f43f5e' }}>
                   R {remaining.toLocaleString()}
                 </span>
-              </div>
-            </div>
-          </div>
+              </footer>
+            </article>
+          </section>
         )}
 
-        {/* VIEW 7: FUTURE ME */}
+        {/* 2.8 FUTURE ME GOALS VIEW */}
         {activeTab === 'future-me' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Future Me: My Goals</h2>
-            <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Build the person you want to become through daily consistency.</p>
+          <section aria-label="Future Me Goals" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <header>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Future Me: My Goals</h2>
+              <p style={{ fontSize: 12, color: '#c084fc', margin: '2px 0 0 0' }}>Build the person you want to become through daily consistency.</p>
+            </header>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <form onSubmit={(e) => { e.preventDefault(); addGoal(); }} style={{ display: 'flex', gap: 8 }}>
               <input 
                 type="text" 
                 placeholder="What skill or goal are you building?"
                 value={newGoalText}
                 onChange={(e) => setNewGoalText(e.target.value)}
-                style={{ flex: 1, padding: '10px 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 9999, color: '#fff', fontSize: 13, outline: 'none' }}
+                style={{ flex: 1, padding: '12px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 9999, color: '#fff', fontSize: 13, outline: 'none' }}
               />
-              <button onClick={addGoal} style={{ background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', color: '#fff', border: 'none', padding: '0 16px', borderRadius: 9999, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              <button type="submit" style={{ background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', color: '#fff', border: 'none', padding: '0 18px', borderRadius: 9999, fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
                 Add
               </button>
-            </div>
+            </form>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {goals.map((g) => (
-                <div key={g.id} style={{ background: '#150a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{g.title}</span>
+                <article key={g.id} style={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)', 
+                  border: '1px solid rgba(255,255,255,0.18)', 
+                  borderRadius: 20, 
+                  padding: 16
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{g.title}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <button 
                         onClick={() => updateGoalProgress(g.id, -10)} 
-                        style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 4, width: 22, height: 22, fontSize: 12, cursor: 'pointer' }}>
+                        style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: 'none', borderRadius: 6, width: 24, height: 24, fontSize: 12, cursor: 'pointer' }}>
                         -
                       </button>
                       <button 
                         onClick={() => updateGoalProgress(g.id, 10)} 
-                        style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 4, width: 22, height: 22, fontSize: 12, cursor: 'pointer' }}>
+                        style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: 'none', borderRadius: 6, width: 24, height: 24, fontSize: 12, cursor: 'pointer' }}>
                         +
                       </button>
-                      <span style={{ fontSize: 12, color: '#c084fc', fontWeight: 700, minWidth: 36, textAlign: 'right' }}>{g.progress}%</span>
+                      <span style={{ fontSize: 12, color: '#c084fc', fontWeight: 800, minWidth: 36, textAlign: 'right' }}>{g.progress}%</span>
                       <button 
                         onClick={() => deleteGoal(g.id)} 
                         style={{ background: 'none', border: 'none', color: '#64748b', marginLeft: 4, cursor: 'pointer' }}>
@@ -1837,44 +2423,115 @@ export default function App() {
                   <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 9999, overflow: 'hidden' }}>
                     <div style={{ width: `${g.progress}%`, height: '100%', background: 'linear-gradient(90deg, #7928ca, #38bdf8)' }} />
                   </div>
-                </div>
+                </article>
               ))}
             </div>
-          </div>
+          </section>
         )}
-
-        {/* 4. FOOTER */}
-        <footer style={{
-          marginTop: 28,
-          paddingTop: 20,
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 6
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.9 }}>
-            <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
-              NEXT<span style={{ color: '#a855f7' }}>GEN</span>
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#c084fc' }}>© 2026</span>
-          </div>
-
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
-            by Indaba Men's Corner • All rights reserved
-          </p>
-
-          <p style={{ fontSize: 10, color: '#64748b', maxWidth: 280, margin: 0, lineHeight: 1.4 }}>
-            Learn from yesterday. Understand today. Build tomorrow.
-          </p>
-        </footer>
       </main>
 
-      {/* MODAL: FAMILY SOS CONTACT */}
+      {/* 3. SEMANTIC FOOTER LANDMARK (OUTSIDE MAIN) */}
+      <footer style={{
+        maxWidth: '480px',
+        margin: '0 auto',
+        marginTop: 28,
+        paddingTop: 20,
+        paddingBottom: 90,
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 6
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.9 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
+            NEXT<span style={{ color: '#a855f7' }}>GEN</span>
+          </span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#c084fc' }}>© 2026</span>
+        </div>
+
+        <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
+          by Indaba Men's Corner • All rights reserved
+        </p>
+
+        <p style={{ fontSize: 10, color: '#64748b', maxWidth: 280, margin: 0, lineHeight: 1.4 }}>
+          Learn from yesterday. Understand today. Build tomorrow.
+        </p>
+      </footer>
+
+      {/* 4. FLOATING CURVED NAVIGATION BAR */}
+      <nav aria-label="Bottom Global Navigation" style={{
+        position: 'fixed',
+        bottom: 14,
+        left: 16,
+        right: 16,
+        maxWidth: 448,
+        margin: '0 auto',
+        height: 66,
+        background: 'linear-gradient(135deg, rgba(25, 11, 52, 0.88) 0%, rgba(13, 5, 33, 0.92) 100%)',
+        backdropFilter: 'blur(30px)',
+        border: '1px solid rgba(255,255,255,0.22)',
+        borderRadius: 9999,
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        zIndex: 50,
+        boxShadow: '0 20px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.35)'
+      }}>
+        {[
+          { tab: 'home', icon: Home, label: 'Home' },
+          { tab: 'friends-chat', icon: MessageSquare, label: 'Chat' },
+          { tab: 'therapy', icon: HeartHandshake, label: 'Therapy' },
+          { tab: 'think-twice', icon: Compass, label: 'Decide' },
+          { tab: 'money', icon: DollarSign, label: 'Money' },
+          { tab: 'future-me', icon: Sparkles, label: 'Future' }
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.tab;
+          return (
+            <button
+              key={item.tab}
+              onClick={() => setActiveTab(item.tab)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isActive ? '#fff' : '#64748b',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+                fontSize: 9,
+                fontWeight: isActive ? 800 : 500,
+                cursor: 'pointer'
+              }}>
+              <div style={{
+                width: 34,
+                height: 34,
+                borderRadius: 9999,
+                background: isActive 
+                  ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' 
+                  : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: isActive ? '0 4px 18px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.4)' : 'none',
+                transition: 'all 0.2s ease'
+              }}>
+                <Icon size={17} color={isActive ? '#fff' : '#94a3b8'} />
+              </div>
+              <span style={{ color: isActive ? '#c084fc' : '#94a3b8' }}>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* 5. MODALS & OVERLAYS */}
       {showSosSetupModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.96)', zIndex: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(20px)' }}>
-          <div style={{ background: '#150a2e', border: '2px solid #ef4444', padding: 22, borderRadius: 24, maxWidth: 400, width: '100%' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.96)', zIndex: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(20px)' }}>
+          <div style={{ background: '#150a2e', border: '2px solid #ef4444', padding: 22, borderRadius: 26, maxWidth: 400, width: '100%', boxShadow: '0 16px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Radio size={20} color="#ef4444" />
@@ -1883,7 +2540,7 @@ export default function App() {
               <X size={18} onClick={() => setShowSosSetupModal(false)} style={{ cursor: 'pointer', color: '#94a3b8' }} />
             </div>
 
-            <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.4, marginTop: 8 }}>
+            <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 8 }}>
               When you tap the <strong>red SOS button</strong>, the app will instantly generate your <strong>live GPS pin</strong> and prepare a dispatch message to this person.
             </p>
 
@@ -1895,7 +2552,7 @@ export default function App() {
                   placeholder="e.g. Mom"
                   value={tempFamilyName}
                   onChange={(e) => setTempFamilyName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginTop: 4 }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginTop: 4 }}
                 />
               </div>
 
@@ -1907,13 +2564,13 @@ export default function App() {
                   value={tempFamilyPhone}
                   onChange={(e) => setTempFamilyPhone(e.target.value)}
                   required
-                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginTop: 4 }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box', marginTop: 4 }}
                 />
               </div>
 
               <button 
                 type="submit"
-                style={{ width: '100%', marginTop: 6, padding: '11px', background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                style={{ width: '100%', marginTop: 6, padding: '11px', background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(220,38,38,0.4)' }}>
                 Save SOS Contact
               </button>
             </form>
@@ -1921,18 +2578,17 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL 0: FIRST-TIME AGE SELECTION ONBOARDING GATE */}
       {showAgeOnboarding && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.98)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(20px)' }}>
-          <div style={{ background: '#150a2e', border: '1px solid #a855f7', padding: 24, borderRadius: 28, maxWidth: 400, width: '100%', textAlign: 'center', boxShadow: '0 16px 40px rgba(121, 40, 202, 0.4)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 9999, background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
-              <UserCheck size={24} color="#fff" />
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.98)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(30px)' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid rgba(168, 85, 247, 0.4)', padding: 26, borderRadius: 30, maxWidth: 400, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(121, 40, 202, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+            <div style={{ width: 50, height: 50, borderRadius: 9999, background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto', boxShadow: '0 6px 20px rgba(168,85,247,0.4)' }}>
+              <UserCheck size={26} color="#fff" />
             </div>
 
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0 }}>Welcome to NextGen 👋</h2>
-            <p style={{ fontSize: 12, color: '#c084fc', marginTop: 4, fontWeight: 600 }}>by Indaba Men's Corner</p>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Welcome to NextGen 👋</h2>
+            <p style={{ fontSize: 12, color: '#c084fc', marginTop: 4, fontWeight: 700 }}>by Indaba Men's Corner</p>
             
-            <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5, margin: '14px 0 18px 0' }}>
+            <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.55, margin: '14px 0 18px 0' }}>
               To ensure all guidance, learning, and opportunities fit you best, please select your age group:
             </p>
 
@@ -1948,15 +2604,16 @@ export default function App() {
                   onClick={() => handleSelectAgeGroup(item.band)}
                   style={{
                     background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(168, 85, 247, 0.25)',
-                    padding: '12px 16px',
-                    borderRadius: 16,
+                    border: '1px solid rgba(168, 85, 247, 0.28)',
+                    padding: '13px 18px',
+                    borderRadius: 18,
                     color: '#fff',
                     textAlign: 'left',
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)'
                   }}>
                   <div>
                     <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{item.label}</h4>
@@ -1974,10 +2631,9 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL 1: THEN NOW NEXT */}
       {showThenNowModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #f59e0b', padding: 20, borderRadius: 24, maxWidth: 420, width: '100%', maxHeight: '80vh', overflowY: 'auto' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #f59e0b', padding: 22, borderRadius: 26, maxWidth: 420, width: '100%', maxHeight: '80vh', overflowY: 'auto', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Clock size={20} color="#f59e0b" />
@@ -1992,30 +2648,29 @@ export default function App() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {THEN_NOW_NEXT_DATA.map((t) => (
-                <div key={t.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 12 }}>
+                <article key={t.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
                   <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 8px 0', color: '#fff' }}>{t.title}</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
                     <p style={{ margin: 0 }}><strong style={{ color: '#f59e0b' }}>THEN:</strong> {t.then}</p>
                     <p style={{ margin: 0 }}><strong style={{ color: '#38bdf8' }}>NOW:</strong> {t.now}</p>
                     <p style={{ margin: 0 }}><strong style={{ color: '#10b981' }}>NEXT:</strong> {t.next}</p>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
 
             <button 
               onClick={() => setShowThenNowModal(false)}
-              style={{ width: '100%', marginTop: 14, padding: '10px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 14, padding: '11px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Close
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: YOUTH OPPORTUNITIES (ENRICHED WITH KZN BURSARIES) */}
       {showOppsModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #38bdf8', padding: 20, borderRadius: 24, maxWidth: 420, width: '100%', maxHeight: '80vh', overflowY: 'auto' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #38bdf8', padding: 22, borderRadius: 26, maxWidth: 420, width: '100%', maxHeight: '80vh', overflowY: 'auto', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Briefcase size={20} color="#38bdf8" />
@@ -2030,31 +2685,30 @@ export default function App() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {OPPORTUNITIES_DATA.map(opp => (
-                <div key={opp.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <article key={opp.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 10, color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>{opp.category}</span>
                     <span style={{ fontSize: 10, color: '#10b981', fontWeight: 700 }}>{opp.stipend}</span>
-                  </div>
+                  </header>
                   <h4 style={{ fontSize: 14, fontWeight: 700, margin: '4px 0 2px 0' }}>{opp.title}</h4>
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{opp.org} • {opp.location} • Age {opp.age}</p>
                   <p style={{ fontSize: 12, color: '#cbd5e1', marginTop: 6, margin: 0 }}>{opp.desc}</p>
-                </div>
+                </article>
               ))}
             </div>
 
             <button 
               onClick={() => setShowOppsModal(false)}
-              style={{ width: '100%', marginTop: 14, padding: '10px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 14, padding: '11px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Close
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 3: PARENTS & GUARDIANS */}
       {showParentsModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #eab308', padding: 22, borderRadius: 24, maxWidth: 400, width: '100%' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #eab308', padding: 22, borderRadius: 26, maxWidth: 400, width: '100%', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Users size={20} color="#eab308" />
@@ -2063,7 +2717,7 @@ export default function App() {
               <X size={18} onClick={() => setShowParentsModal(false)} style={{ cursor: 'pointer', color: '#94a3b8' }} />
             </div>
 
-            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.55, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <p>
                 <strong>Age-Aware Architecture:</strong> NextGen is designed with different age groups in mind (9–12, 13–15, 16–17, 18–25). Content and experiences are presented in an age-appropriate way.
               </p>
@@ -2077,17 +2731,16 @@ export default function App() {
 
             <button 
               onClick={() => setShowParentsModal(false)}
-              style={{ width: '100%', marginTop: 14, padding: '10px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 14, padding: '11px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Understood
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 4: ABOUT NEXTGEN */}
       {showAboutModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #a855f7', padding: 22, borderRadius: 24, maxWidth: 400, width: '100%' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #a855f7', padding: 22, borderRadius: 26, maxWidth: 400, width: '100%', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Info size={20} color="#38bdf8" />
@@ -2096,13 +2749,13 @@ export default function App() {
               <X size={18} onClick={() => setShowAboutModal(false)} style={{ cursor: 'pointer', color: '#94a3b8' }} />
             </div>
 
-            <p style={{ fontSize: 12, color: '#c084fc', marginTop: 6, fontWeight: 600 }}>by Indaba Men's Corner</p>
+            <p style={{ fontSize: 12, color: '#c084fc', marginTop: 6, fontWeight: 700 }}>by Indaba Men's Corner</p>
             
             <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5, marginTop: 12 }}>
               Learn more about the NextGen mission, vision, and the young people the platform is designed to support across KwaZulu-Natal and South Africa.
             </p>
 
-            <div style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 14, margin: '12px 0', fontSize: 12, color: '#cbd5e1' }}>
+            <div style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 16, margin: '12px 0', fontSize: 12, color: '#cbd5e1' }}>
               <p style={{ margin: '0 0 6px 0' }}><strong style={{ color: '#f59e0b' }}>THEN:</strong> Learn from previous generations.</p>
               <p style={{ margin: '0 0 6px 0' }}><strong style={{ color: '#38bdf8' }}>NOW:</strong> Understand today's digital world.</p>
               <p style={{ margin: 0 }}><strong style={{ color: '#10b981' }}>NEXT:</strong> Build the skills and mindset for tomorrow.</p>
@@ -2110,17 +2763,16 @@ export default function App() {
 
             <button 
               onClick={() => setShowAboutModal(false)}
-              style={{ width: '100%', marginTop: 12, padding: '10px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 12, padding: '11px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Close
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 5: CONTACT US */}
       {showContactModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #a855f7', padding: 22, borderRadius: 24, maxWidth: 400, width: '100%' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #a855f7', padding: 22, borderRadius: 26, maxWidth: 400, width: '100%', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Mail size={20} color="#a855f7" />
@@ -2136,14 +2788,14 @@ export default function App() {
             <a 
               href="tel:0815325916" 
               style={{ 
-                background: 'rgba(56, 189, 248, 0.12)', 
+                background: 'rgba(56, 189, 248, 0.15)', 
                 border: '1px solid #38bdf8', 
-                padding: '10px 14px', 
-                borderRadius: 12, 
+                padding: '11px 16px', 
+                borderRadius: 14, 
                 color: '#38bdf8', 
                 textDecoration: 'none', 
                 fontSize: 13, 
-                fontWeight: 700, 
+                fontWeight: 800, 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
@@ -2154,9 +2806,9 @@ export default function App() {
             </a>
 
             {contactSent ? (
-              <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', padding: 14, borderRadius: 14, marginTop: 14, textAlign: 'center' }}>
+              <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', padding: 14, borderRadius: 16, marginTop: 14, textAlign: 'center' }}>
                 <CheckCircle2 size={24} color="#10b981" style={{ margin: '0 auto 6px auto' }} />
-                <p style={{ fontSize: 13, color: '#10b981', fontWeight: 700, margin: 0 }}>Message sent successfully!</p>
+                <p style={{ fontSize: 13, color: '#10b981', fontWeight: 800, margin: 0 }}>Message sent successfully!</p>
                 <p style={{ fontSize: 11, color: '#cbd5e1', marginTop: 4 }}>We appreciate you connecting with us.</p>
               </div>
             ) : (
@@ -2166,7 +2818,7 @@ export default function App() {
                   placeholder="Your Name / Nickname"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#fff', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '11px 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: '#fff', fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
                 />
                 <textarea 
                   rows="3"
@@ -2174,28 +2826,27 @@ export default function App() {
                   value={contactMsg}
                   onChange={(e) => setContactMsg(e.target.value)}
                   required
-                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#fff', fontSize: 12, outline: 'none', boxSizing: 'border-box', resize: 'none' }}
+                  style={{ width: '100%', padding: '11px 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, color: '#fff', fontSize: 12, outline: 'none', boxSizing: 'border-box', resize: 'none' }}
                 />
                 <button 
                   type="submit"
-                  style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '11px', background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
                   Send Message
                 </button>
               </form>
             )}
 
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 11, color: '#94a3b8' }}>
+            <footer style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 11, color: '#94a3b8' }}>
               <strong>Need Help?</strong> Use Contact Us or call <strong>081 532 5916</strong>.<br/>
               📧 Email: info@indabamenscorner.co.za
-            </div>
+            </footer>
           </div>
         </div>
       )}
 
-      {/* MODAL 6: PRIVACY & SAFETY POLICY */}
       {showPrivacyModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#150a2e', border: '1px solid #10b981', padding: 22, borderRadius: 24, maxWidth: 400, width: '100%' }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '1px solid #10b981', padding: 22, borderRadius: 26, maxWidth: 400, width: '100%', backdropFilter: 'blur(30px)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <ShieldCheck size={20} color="#10b981" />
@@ -2208,7 +2859,7 @@ export default function App() {
               Learn how NextGen protects young users, handles information responsibly, and promotes a safe, age-appropriate digital environment.
             </p>
 
-            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.55, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <p>🔒 <strong>Zero Public Minors Directory:</strong> NextGen does not expose youth profiles, contact details, or location.</p>
               <p>🛡️ <strong>No Stranger Matching:</strong> We do not offer open direct messaging between strangers. Minors only chat with saved device contacts.</p>
               <p>📱 <strong>Local Confidentiality:</strong> Your reflections, journal entries, and chats are stored locally on your device.</p>
@@ -2217,39 +2868,38 @@ export default function App() {
 
             <button 
               onClick={() => setShowPrivacyModal(false)}
-              style={{ width: '100%', marginTop: 14, padding: '10px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 14, padding: '11px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               I Understand
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL 7: GET HELP & SOS */}
       {showHelpModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.95)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(20px)' }}>
-          <div style={{ background: '#150a2e', border: '2px solid #ef4444', padding: 20, borderRadius: 24, maxWidth: 440, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(5, 1, 18, 0.95)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(30px)' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(25, 10, 52, 0.95) 0%, rgba(12, 4, 30, 0.98) 100%)', border: '2px solid #ef4444', padding: 22, borderRadius: 28, maxWidth: 440, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <ShieldAlert size={22} color="#ef4444" />
-                <h3 style={{ color: '#ef4444', fontSize: 18, fontWeight: 800, margin: 0 }}>GET HELP & EMERGENCY</h3>
+                <h3 style={{ color: '#ef4444', fontSize: 18, fontWeight: 900, margin: 0 }}>GET HELP & EMERGENCY</h3>
               </div>
               <X size={20} onClick={() => setShowHelpModal(false)} style={{ cursor: 'pointer', color: '#94a3b8' }} />
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)', borderRadius: 16, padding: 14, marginBottom: 14, border: '1px solid rgba(255,255,255,0.2)' }}>
+            <article style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%)', borderRadius: 18, padding: 16, marginBottom: 14, border: '1px solid rgba(255,255,255,0.25)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <Siren size={18} color="#fff" />
                 <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: 0.5 }}>IMMEDIATE DANGER? CALL POLICE / EMS:</span>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <a 
                   href="tel:112"
                   style={{
                     flex: 1,
                     background: '#fff',
                     color: '#991b1b',
-                    padding: '10px 8px',
-                    borderRadius: 12,
+                    padding: '11px 8px',
+                    borderRadius: 14,
                     textDecoration: 'none',
                     fontWeight: 900,
                     fontSize: 14,
@@ -2266,11 +2916,11 @@ export default function App() {
                   href="tel:10111"
                   style={{
                     flex: 1,
-                    background: '#1e293b',
+                    background: 'rgba(30, 41, 59, 0.85)',
                     color: '#38bdf8',
                     border: '1px solid #38bdf8',
-                    padding: '10px 8px',
-                    borderRadius: 12,
+                    padding: '11px 8px',
+                    borderRadius: 14,
                     textDecoration: 'none',
                     fontWeight: 900,
                     fontSize: 14,
@@ -2283,52 +2933,54 @@ export default function App() {
                   <Phone size={14} /> 10111 (Police)
                 </a>
               </div>
-            </div>
+            </article>
 
-            <p style={{ fontSize: 11, color: '#c084fc', fontWeight: 700, margin: '0 0 6px 0' }}>WHAT KIND OF HELP DO YOU NEED?</p>
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
-              {[
-                { key: 'all', label: 'All Contacts' },
-                { key: 'sos', label: '🚨 SOS / Police' },
-                { key: 'child', label: '🧒 Child / Youth' },
-                { key: 'mental', label: '🧠 Mental / Suicide' },
-                { key: 'gbv', label: '🛡️ GBV Abuse' }
-              ].map(cat => (
-                <button
-                  key={cat.key}
-                  onClick={() => setHelpCategory(cat.key)}
-                  style={{
-                    background: helpCategory === cat.key ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'rgba(255,255,255,0.06)',
-                    color: '#fff',
-                    border: '1px solid ' + (helpCategory === cat.key ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'),
-                    padding: '6px 12px',
-                    borderRadius: 9999,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer'
-                  }}>
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+            <nav aria-label="Crisis Categories" style={{ margin: '0 0 8px 0' }}>
+              <p style={{ fontSize: 11, color: '#c084fc', fontWeight: 800, margin: '0 0 8px 0' }}>WHAT KIND OF HELP DO YOU NEED?</p>
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                {[
+                  { key: 'all', label: 'All Contacts' },
+                  { key: 'sos', label: '🚨 SOS / Police' },
+                  { key: 'child', label: '🧒 Child / Youth' },
+                  { key: 'mental', label: '🧠 Mental / Suicide' },
+                  { key: 'gbv', label: '🛡️ GBV Abuse' }
+                ].map(cat => (
+                  <button
+                    key={cat.key}
+                    onClick={() => setHelpCategory(cat.key)}
+                    style={{
+                      background: helpCategory === cat.key ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'rgba(255,255,255,0.06)',
+                      color: '#fff',
+                      border: '1px solid ' + (helpCategory === cat.key ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)'),
+                      padding: '7px 14px',
+                      borderRadius: 9999,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer'
+                    }}>
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               {filteredEmergencyServices.map(srv => (
-                <div key={srv.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, background: `${srv.badgeColor}22`, color: srv.badgeColor, padding: '2px 8px', borderRadius: 9999, fontWeight: 800 }}>
+                <article key={srv.id} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, background: `${srv.badgeColor}22`, color: srv.badgeColor, padding: '3px 10px', borderRadius: 9999, fontWeight: 800, border: `1px solid ${srv.badgeColor}44` }}>
                       {srv.tag}
                     </span>
                     <span style={{ fontSize: 10, color: '#10b981', fontWeight: 700 }}>
                       {srv.tollFree ? 'Toll-Free (Free)' : 'Standard Rates'}
                     </span>
-                  </div>
+                  </header>
 
-                  <h4 style={{ fontSize: 14, fontWeight: 700, margin: '6px 0 2px 0', color: '#fff' }}>{srv.name}</h4>
-                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, lineHeight: 1.4 }}>{srv.desc}</p>
+                  <h4 style={{ fontSize: 14, fontWeight: 800, margin: '6px 0 2px 0', color: '#fff' }}>{srv.name}</h4>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, lineHeight: 1.45 }}>{srv.desc}</p>
 
-                  <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <footer style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                     <a 
                       href={`tel:${srv.phone}`}
                       style={{
@@ -2336,8 +2988,8 @@ export default function App() {
                         background: 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)',
                         color: '#fff',
                         textDecoration: 'none',
-                        padding: '8px 10px',
-                        borderRadius: 10,
+                        padding: '9px 10px',
+                        borderRadius: 12,
                         fontSize: 12,
                         fontWeight: 800,
                         textAlign: 'center',
@@ -2356,10 +3008,10 @@ export default function App() {
                           background: 'rgba(255,255,255,0.08)',
                           color: '#38bdf8',
                           textDecoration: 'none',
-                          padding: '8px 12px',
-                          borderRadius: 10,
+                          padding: '9px 12px',
+                          borderRadius: 12,
                           fontSize: 11,
-                          fontWeight: 700,
+                          fontWeight: 800,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4
@@ -2367,81 +3019,19 @@ export default function App() {
                         USSD {srv.ussd}
                       </a>
                     )}
-                  </div>
-                </div>
+                  </footer>
+                </article>
               ))}
             </div>
 
             <button 
               onClick={() => setShowHelpModal(false)}
-              style={{ width: '100%', marginTop: 14, padding: '10px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ width: '100%', marginTop: 14, padding: '11px', background: '#334155', border: 'none', borderRadius: 9999, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Close Help Navigator
             </button>
           </div>
         </div>
       )}
-
-      {/* 5. FLOATING CURVED BOTTOM NAVIGATION */}
-      <nav style={{
-        position: 'fixed',
-        bottom: 12,
-        left: 16,
-        right: 16,
-        maxWidth: 448,
-        margin: '0 auto',
-        height: 62,
-        background: 'rgba(18, 9, 38, 0.92)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: 9999,
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        zIndex: 50,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-      }}>
-        {[
-          { tab: 'home', icon: Home, label: 'Home' },
-          { tab: 'friends-chat', icon: MessageCircle, label: 'Chat' },
-          { tab: 'therapy', icon: HeartHandshake, label: 'Therapy' },
-          { tab: 'think-twice', icon: AlertTriangle, label: 'Decide' },
-          { tab: 'money', icon: DollarSign, label: 'Money' },
-          { tab: 'future-me', icon: Target, label: 'Future' }
-        ].map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.tab;
-          return (
-            <button
-              key={item.tab}
-              onClick={() => setActiveTab(item.tab)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: isActive ? '#fff' : '#64748b',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-                fontSize: 9,
-                fontWeight: isActive ? 700 : 500,
-                cursor: 'pointer'
-              }}>
-              <div style={{
-                width: 32,
-                height: 32,
-                borderRadius: 9999,
-                background: isActive ? 'linear-gradient(135deg, #7928ca 0%, #a855f7 100%)' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Icon size={16} color={isActive ? '#fff' : '#94a3b8'} />
-              </div>
-              <span style={{ color: isActive ? '#c084fc' : '#94a3b8' }}>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-    </div>
+    </>
   );
 }

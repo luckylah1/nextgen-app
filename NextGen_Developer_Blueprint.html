@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4 portrait; margin: 12mm 12mm 12mm 12mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 0; padding: 0; line-height: 1.4; font-size: 11.5px; }
+  .page { page-break-after: always; min-height: 98vh; display: flex; flex-direction: column; justify-content: space-between; }
+  .page:last-child { page-break-after: avoid; }
+  .header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #7c3aed; padding-bottom: 6px; margin-bottom: 12px; }
+  .brand { font-size: 22px; font-weight: 900; color: #4c1d95; }
+  .brand span { color: #9333ea; }
+  .badge { background: #ede9fe; color: #6b21a8; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 800; border: 1px solid #d8b4fe; }
+  h2 { font-size: 14px; color: #4338ca; margin: 10px 0 4px 0; border-bottom: 1px solid #e0e7ff; padding-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  h3 { font-size: 12px; color: #1e1b4b; margin: 6px 0 2px 0; font-weight: 800; }
+  .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .code-block { background: #090d16; color: #38bdf8; font-family: 'Consolas', 'Courier New', monospace; font-size: 10.5px; padding: 6px 10px; border-radius: 6px; margin: 4px 0 8px 0; border-left: 3px solid #7c3aed; white-space: pre-wrap; word-break: break-all; }
+  .cmd-desc { font-size: 11px; color: #475569; margin-bottom: 2px; }
+  ul { margin: 2px 0 6px 16px; padding: 0; }
+  li { margin-bottom: 2px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .footer { border-top: 1px solid #cbd5e1; padding-top: 6px; font-size: 9.5px; color: #64748b; display: flex; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 11px; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; }
+  th { background: #f1f5f9; color: #334155; font-weight: 800; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: TOOLCHAIN, ARCHITECTURE & INITIALIZATION -->
+<div class="page">
+  <div>
+    <div class="header">
+      <div class="brand">NEXT<span>GEN</span> <span style="font-size:12px; font-weight:600; color:#6b21a8;">Developer Blueprint & Runbook</span></div>
+      <span class="badge">Technical Reference Manual</span>
+    </div>
+
+    <div class="card" style="background:#4c1d95; color:#fff; border:none;">
+      <div style="font-size:10px; font-weight:800; color:#ddd6fe; text-transform:uppercase;">Master Architecture Summary</div>
+      <div style="font-size:15px; font-weight:900; margin:2px 0;">NextGen Mobile & Web Hybrid Application</div>
+      <p style="font-size:11px; color:#f3e8ff; margin:0; line-height:1.4;">
+        Built for the FNB App Academy and South African Youth Wellness initiative under Indaba Men's Corner. Combines offline-first React SPA architectures with hardware-native Android runtime bridges via Capacitor.
+      </p>
+    </div>
+
+    <h2>1. Core Toolchain & Prerequisites Inventory</h2>
+    <table>
+      <thead>
+        <tr><th>Tool / SDK</th><th>Component / Package</th><th>Role in NextGen Project</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Node.js & npm</strong></td><td>Node v18+ / v20+</td><td>Build execution runtime and package manager</td></tr>
+        <tr><td><strong>Vite & React</strong></td><td>react, react-dom, vite</td><td>Declarative UI rendering, fast HMR, and bundle optimization</td></tr>
+        <tr><td><strong>Capacitor Core</strong></td><td>@capacitor/core, @capacitor/cli</td><td>Cross-platform native runtime bridge</td></tr>
+        <tr><td><strong>Capacitor Android</strong></td><td>@capacitor/android</td><td>Native Android platform container & Gradle runner</td></tr>
+        <tr><td><strong>Device Sensors</strong></td><td>@capacitor/geolocation</td><td>Live GPS coordinates for Family SOS distress beacon</td></tr>
+        <tr><td><strong>Device Contacts</strong></td><td>@capacitor-community/contacts</td><td>Secure local phonebook matching for safe friends chat</td></tr>
+        <tr><td><strong>Storage Engine</strong></td><td>@capacitor/preferences</td><td>Encrypted native key-value state persistence (POPIA)</td></tr>
+        <tr><td><strong>Design System</strong></td><td>lucide-react, Custom Glassmorphism</td><td>Ultra-gloss iconography, specular highlight UI tokens</td></tr>
+        <tr><td><strong>Android Studio</strong></td><td>Android SDK 34, JDK 17, Gradle</td><td>Emulator testing, signing, and AAB/APK release packaging</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2. Complete Project Bootstrapping Sequence</h2>
+    <div class="cmd-desc">Step 1: Scaffold fresh React application using Vite</div>
+    <div class="code-block">npm.cmd create vite@latest nextgen-app -- --template react
+cd nextgen-app</div>
+
+    <div class="cmd-desc">Step 2: Install UI dependencies and Lucide icon library</div>
+    <div class="code-block">npm.cmd install lucide-react</div>
+
+    <div class="cmd-desc">Step 3: Install Capacitor native core and CLI tools</div>
+    <div class="code-block">npm.cmd install @capacitor/core
+npm.cmd install -D @capacitor/cli</div>
+
+    <div class="cmd-desc">Step 4: Initialize Capacitor config (App Name & Package ID)</div>
+    <div class="code-block">npx.cmd cap init "NextGen" "com.indabamenscorner.nextgen" --web-dir dist</div>
+
+    <div class="cmd-desc">Step 5: Install native hardware and storage plugins</div>
+    <div class="code-block">npm.cmd install @capacitor/geolocation @capacitor-community/contacts @capacitor/preferences
+npm.cmd install @capacitor/android</div>
+
+    <div class="cmd-desc">Step 6: Inject Android native platform directory</div>
+    <div class="code-block">npx.cmd cap add android</div>
+  </div>
+
+  <div class="footer">
+    <span>NextGen Project Blueprint • Toolchain & Initialization</span>
+    <span>Page 1 of 3</span>
+  </div>
+</div>
+
+<!-- PAGE 2: RUNTIME COMMANDS, COMPILATION & ANDROID BUILD -->
+<div class="page">
+  <div>
+    <div class="header">
+      <div class="brand">NEXT<span>GEN</span> <span style="font-size:12px; font-weight:600; color:#6b21a8;">Terminal Runbook & Build Commands</span></div>
+      <span class="badge">Compilation & Testing</span>
+    </div>
+
+    <h2>3. Daily Development & Live Hot-Reload Workflow</h2>
+    <div class="cmd-desc">Run local development server with instant HMR:</div>
+    <div class="code-block">cd C:\nextgen-app
+npm.cmd run dev</div>
+    <p style="font-size:10.5px; color:#64748b; margin:2px 0 8px 0;">Accessible locally at <code>http://localhost:5173/</code></p>
+
+    <h2>4. Production Build & Native Sync Sequence</h2>
+    <p style="font-size:11px; margin-bottom:4px;">Execute these two commands whenever changes are made to <code>src/App.jsx</code> or public assets:</p>
+    <div class="cmd-desc">1. Compile optimized web assets into /dist folder:</div>
+    <div class="code-block">npm.cmd run build</div>
+    <div class="cmd-desc">2. Copy dist bundle and sync native plugin configurations to Android Studio:</div>
+    <div class="code-block">npx.cmd cap sync android</div>
+
+    <h2>5. Android Studio Launch & CLI Release Packaging</h2>
+    <div class="cmd-desc">Option A: Open the native project directly inside Android Studio GUI:</div>
+    <div class="code-block">npx.cmd cap open android</div>
+
+    <div class="cmd-desc">Option B: Build production APK directly from terminal (No GUI required):</div>
+    <div class="code-block">cd C:\nextgen-app\android
+.\gradlew.bat assembleRelease</div>
+
+    <div class="cmd-desc">Option C: Build Google Play Store production bundle (.aab):</div>
+    <div class="code-block">cd C:\nextgen-app\android
+.\gradlew.bat bundleRelease</div>
+
+    <div class="cmd-desc">Inspect output directory in Windows Explorer:</div>
+    <div class="code-block">explorer.exe app\build\outputs\apk\release</div>
+
+    <h2>6. Android Permissions & Native Manifest Rules</h2>
+    <div class="card">
+      <div class="card-title">Configured in android/app/src/main/AndroidManifest.xml:</div>
+      <ul>
+        <li><code>android.permission.ACCESS_FINE_LOCATION</code> - High-precision GPS for Family SOS beacons</li>
+        <li><code>android.permission.ACCESS_COARSE_LOCATION</code> - Cellular tower positioning fallback</li>
+        <li><code>android.permission.READ_CONTACTS</code> - Local address book discovery for safe friends chat</li>
+        <li><code>android.permission.INTERNET</code> - WebView asset delivery and external social handoffs</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>NextGen Project Blueprint • Terminal Commands & Native Build</span>
+    <span>Page 2 of 3</span>
+  </div>
+</div>
+
+<!-- PAGE 3: RECOVERY, GIT DEPLOYMENT & MAINTENANCE -->
+<div class="page">
+  <div>
+    <div class="header">
+      <div class="brand">NEXT<span>GEN</span> <span style="font-size:12px; font-weight:600; color:#6b21a8;">Troubleshooting & Web Deployment</span></div>
+      <span class="badge">Maintenance & Deployment</span>
+    </div>
+
+    <h2>7. GitHub Pages Automated Live Web Deployment</h2>
+    <div class="cmd-desc">Build and push updates to the live web portal (https://luckylah1.github.io/nextgen-app/):</div>
+    <div class="code-block">cd C:\nextgen-app
+npm.cmd run build
+git add .
+git commit -m "feat: ultra-gloss UI upgrade, grade-adaptive companion, and social chat"
+git push origin main</div>
+
+    <h2>8. Full System Reset & Clean-Build Procedures</h2>
+    <p style="font-size:11px; margin-bottom:4px;">If Gradle hangs, dependencies conflict, or Vite exhibits caching errors, run this exact sequence:</p>
+    
+    <div class="cmd-desc">1. Purge Gradle cache and build artifacts:</div>
+    <div class="code-block">cd C:\nextgen-app\android
+.\gradlew.bat clean
+cd ..</div>
+
+    <div class="cmd-desc">2. Reinstall Node modules cleanly:</div>
+    <div class="code-block">rmdir /s /q node_modules
+del package-lock.json
+npm.cmd install</div>
+
+    <div class="cmd-desc">3. Re-bundle and re-sync native bridge:</div>
+    <div class="code-block">npm.cmd run build
+npx.cmd cap sync android</div>
+
+    <h2>9. Production Release Artifact Locations</h2>
+    <table>
+      <thead>
+        <tr><th>Artifact Type</th><th>Filesystem Location / URL</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Release APK</strong></td><td><code>C:\nextgen-app\android\app\build\outputs\apk\release\app-release.apk</code></td></tr>
+        <tr><td><strong>Production AAB</strong></td><td><code>C:\nextgen-app\android\app\build\outputs\bundle\release\app-release.aab</code></td></tr>
+        <tr><td><strong>Live Web App</strong></td><td><code>https://luckylah1.github.io/nextgen-app/</code></td></tr>
+        <tr><td><strong>Privacy Policy</strong></td><td><code>https://luckylah1.github.io/nextgen-app/privacy.html</code></td></tr>
+        <tr><td><strong>Pitch Deck PDF</strong></td><td><code>C:\nextgen-app\NextGen_Pitch_Deck.pdf</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>10. Key Architecture Checkpoints to Remember</h2>
+    <ul>
+      <li><strong>POPIA Data Privacy:</strong> User reflections, budget states, and dilemma votes must stay in @capacitor/preferences. Never transmit minor data to unauthenticated servers.</li>
+      <li><strong>Social Handoff Deep-Links:</strong> Uses WhatsApp (https://wa.me/&lt;phone&gt;?text=...), Instagram (https://instagram.com/direct/inbox/), and Messenger (https://m.me/).</li>
+      <li><strong>Inner Companion Personas:</strong> Controlled in COMPANION_GRADE_PERSONAS dictionary in src/App.jsx. Easily adjust copy for different grades or school campaigns.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <span>NextGen Project Blueprint • Maintenance & Recovery • Indaba Men's Corner 2026</span>
+    <span>Page 3 of 3</span>
+  </div>
+</div>
+
+</body>
+</html>

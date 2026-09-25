@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4 portrait; margin: 15mm 15mm 15mm 15mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e1b4b; margin: 0; padding: 0; line-height: 1.45; font-size: 13px; }
+  .page { page-break-after: always; min-height: 98vh; display: flex; flex-direction: column; justify-content: space-between; }
+  .page:last-child { page-break-after: avoid; }
+  .header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 16px; }
+  .brand { font-size: 26px; font-weight: 900; color: #581c87; letter-spacing: -0.5px; }
+  .brand span { color: #9333ea; }
+  .badge { background: #f3e8ff; color: #7e22ce; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 1px solid #d8b4fe; }
+  h2 { font-size: 16px; color: #4c1d95; margin: 12px 0 6px 0; border-bottom: 1px solid #e9d5ff; padding-bottom: 4px; }
+  p { margin: 4px 0 8px 0; }
+  .card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
+  .card-title { font-weight: 800; color: #6b21a8; font-size: 13px; margin-bottom: 4px; }
+  ul { margin: 4px 0 10px 18px; padding: 0; }
+  li { margin-bottom: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .footer { border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 10px; color: #64748b; display: flex; justify-content: space-between; }
+  .tag { display: inline-block; background: #ede9fe; color: #6b21a8; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<div class="page">
+  <div>
+    <div class="header">
+      <div class="brand">NEXT<span>GEN</span> <span style="font-size:12px; font-weight:600; color:#9333ea;">by Indaba Men's Corner</span></div>
+      <span class="badge">Official Competition Pitch Deck</span>
+    </div>
+
+    <div class="card" style="background:#581c87; color:#fff; border:none;">
+      <div style="font-size:11px; font-weight:800; color:#f3e8ff; text-transform:uppercase; letter-spacing:0.5px;">Executive Summary</div>
+      <div style="font-size:16px; font-weight:900; margin:4px 0;">Youth Safety, Decision Engine & Crisis Navigator</div>
+      <div style="font-size:11px; color:#e9d5ff; font-style:italic;">Tagline: Learn from yesterday. Understand today. Build tomorrow.</div>
+      <p style="font-size:12px; color:#f5f3ff; margin-top:8px; line-height:1.4;">
+        NextGen is an offline-resilient, privacy-first mobile youth wellness and decision platform engineered specifically for South African youth (Ages 9–25). Addressing critical vulnerabilities in community safety, mental health, and economic readiness, NextGen empowers adolescents to make informed life choices while providing rapid-response emergency beacons.
+      </p>
+    </div>
+
+    <h2>1. Selected Challenge & Problem Statement</h2>
+    <div class="card">
+      <span class="tag">Primary Problem Track</span>
+      <strong style="color:#581c87;">Safer communities and gender-based violence response</strong>
+      <div style="margin-top:6px;">
+        <span class="tag">Intersecting Pillars</span>
+        <span style="font-size:12px; color:#475569;">Financial inclusion and money confidence • Youth employment and work readiness</span>
+      </div>
+    </div>
+
+    <h2>2. Key Community Challenges Addressed</h2>
+    <ul>
+      <li><strong>GBV & Street Vulnerability:</strong> High incidence of street harassment, abduction risk, and gender-based violence impacting adolescent girls and youth in peri-urban and township environments.</li>
+      <li><strong>Stranger Exploitation:</strong> Traditional social networking architectures leave minors vulnerable to online grooming, digital stalking, and cyberbullying.</li>
+      <li><strong>Acute Mental Distress & Isolation:</strong> High youth suicide rates and exam depression exacerbated by stigma and disjointed helplines.</li>
+      <li><strong>Data Poverty & Information Gap:</strong> Essential provincial bursaries, NSFAS portals, and crisis hotlines are fragmented across data-heavy websites.</li>
+    </ul>
+
+    <h2>3. The NextGen Innovation & Safety Pillars</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">🚨 Instant Family SOS</div>
+        Hardware-accelerated native GPS pin retrieval with single-tap emergency SMS dispatch directly to designated guardians.
+      </div>
+      <div class="card">
+        <div class="card-title">🛡️ Verified Crisis Directory</div>
+        One-tap direct dialers for GBV Command Centre (0800 428 428), Childline SA (116), SAPS Flying Squad (10111), and SADAG.
+      </div>
+      <div class="card">
+        <div class="card-title">🔒 POPIA & Child-Safe by Design</div>
+        No public minor directories, no stranger discovery, and client-side secure encrypted storage for private reflections.
+      </div>
+      <div class="card">
+        <div class="card-title">💬 Safe Friends Messaging</div>
+        Restricted strictly to verified device phone contacts with quick handoffs to WhatsApp and Instagram DM.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>NextGen Mobile Application Pitch Deck</span>
+    <span>Page 1 of 2</span>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page">
+  <div>
+    <div class="header">
+      <div class="brand">NEXT<span>GEN</span> <span style="font-size:12px; font-weight:600; color:#9333ea;">Technical Architecture & Metrics</span></div>
+      <span class="badge">Implementation & Impact</span>
+    </div>
+
+    <h2>4. Mentorship & Economic Resilience Engine</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">🤖 Grade-Adaptive Inner Companion</div>
+        An adaptive AI mentor tailored to South African educational phases:
+        <ul style="font-size:11px; margin-top:4px;">
+          <li><strong>Ages 9–12:</strong> Explorer mode, homework habits, anti-bullying.</li>
+          <li><strong>Ages 13–15:</strong> Senior phase, Grade 9 subject selection, peer pressure.</li>
+          <li><strong>Ages 16–17:</strong> Matric trial focus, APS points, NSFAS bursary deadlines.</li>
+          <li><strong>Ages 18–25:</strong> YES4Youth, TVET careers, CV readiness.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">🗳️ The Daily Dilemma & Consensus</div>
+        Gamified blind peer polls on ethical crossroads (exam cheating, taxi money ethics, sextortion prevention) that reveal peer consensus stats only after voting.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🇿🇦 Money Zone: South African Rand (ZAR) Simulator</div>
+      Interactive offline budget calculator with real-world presets (Student R2,500, Entry Job R6,500, Freelancer R10,000) that models savings, transport, and education allocation.
+    </div>
+
+    <h2>5. Technical Stack & Deployment Artifacts</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Mobile & Web Stack</div>
+        <ul style="font-size:11px; margin:0 0 0 16px;">
+          <li>Frontend: React 18, Vite, Lucide Icons, Glassmorphic UI</li>
+          <li>Runtime: Capacitor Android Bridge</li>
+          <li>Hardware APIs: Geolocation, Native Device Contacts</li>
+          <li>Persistence: Native Encrypted Key-Value Storage</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Verification & Hosting</div>
+        <ul style="font-size:11px; margin:0 0 0 16px;">
+          <li>Live Web Portal: https://luckylah1.github.io/nextgen-app/</li>
+          <li>Privacy Policy: luckylah1.github.io/nextgen-app/privacy.html</li>
+          <li>Package: Production Release APK (app-release.apk)</li>
+          <li>License: Freeware (100% Free Public Solution)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>6. Social Impact & Alignment with Competition Goals</h2>
+    <ul>
+      <li><strong>Zero-Rated & Offline Resilience:</strong> Functions without requiring mobile data once downloaded, overcoming connectivity hurdles in rural and township schools.</li>
+      <li><strong>Community Roots:</strong> Sponsored by <em>Indaba Men's Corner</em>, actively involving young men in accountability, gender-based violence prevention, and community upliftment.</li>
+      <li><strong>Scalable Blueprint:</strong> Designed to deploy across schools, youth centres, and TVET colleges nationwide without costly server infrastructures.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <span>NextGen • Founded by Indaba Men's Corner • All Rights Reserved 2026</span>
+    <span>Page 2 of 2</span>
+  </div>
+</div>
+
+</body>
+</html>
